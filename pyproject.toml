@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "fastapi-whistler-microservices"
+version = "0.1.0"
+description = ""
+authors = ["itz-amethyst <>"]
+license = "AGPL"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.0"
+sqlalchemy = "^2.0.31"
+psycopg2-binary = "^2.9.9"
+python-dotenv = "^1.0.1"
+pydantic-settings = "^2.3.4"
+asyncpg = "^0.29.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
