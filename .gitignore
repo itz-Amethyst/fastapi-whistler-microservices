@@ -1,0 +1,13 @@
+.venv/
+/venv
+.env
+
+.env.secrets
+.env*
+dist/
+build/
+__pycache__
+
+
+logs
+log
