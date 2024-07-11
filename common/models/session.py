@@ -1,8 +1,8 @@
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
-from sqlalchemy import text
+from contextlib import asynccontextmanager, contextmanager
+from typing import AsyncIterator, Union
+from sqlalchemy import create_engine, text, MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncConnection
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base, Session
 
 from common.config import settings
 # Database configuration
@@ -12,10 +12,13 @@ db_user = settings.POSTGRES_USER
 db_name = settings.POSTGRES_DB
 
 DATABASE_URL = f"postgresql+asyncpg://{db_user}:{db_password}@db:5432/{db_name}"
-DATABASE_ENGINE = create_async_engine(DATABASE_URL, echo=True, future=True)
-DATABASE_ENGINE.conn
+DATABASE_ENGINE_ASYNC = create_async_engine(DATABASE_URL, echo=True, future=True)
+DATABASE_ENGINE = create_engine(DATABASE_URL.replace("postgresql+asyncpg", "postgresql"), echo=True, future=True)
 
-session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=DATABASE_ENGINE)
+MetaData = MetaData()
+
+session_factory_async = async_sessionmaker(autocommit=False, bind=DATABASE_ENGINE_ASYNC)
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=DATABASE_ENGINE_ASYNC)
 
 # not useful when using async senario instead handled manually
 # SessionLocal = scoped_session(session_factory)
@@ -23,11 +26,14 @@ session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=DAT
 # Construct a base class for declarative class definitions
 Base = declarative_base()
 
+# Supports both async and sync
 class DBSessionManager:
 
     def __init__(self) -> None:
-        self._async_engine = DATABASE_ENGINE
-        self._async_sessionmaker = session_factory
+        self._async_engine = DATABASE_ENGINE_ASYNC
+        self._async_sessionmaker = session_factory_async
+        self._sync_engine = DATABASE_ENGINE
+        self._sync_sessionmaker = session_factory
 
     async def close_async(self):
         if self._async_engine is None:
@@ -37,6 +43,10 @@ class DBSessionManager:
         self._async_engine = None
         self._async_sessionmaker = None
 
+    def close_sync(self):
+        if self._sync_engine is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+        self._sync_engine.dispose()
 
     @staticmethod
     @asynccontextmanager
@@ -64,7 +74,28 @@ class DBSessionManager:
             raise
         finally:
             session.close()
+    @contextmanager
+    def session_sync(self):
+        if self._sync_sessionmaker is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+        
+        session = self._sync_sessionmaker
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def __enter__(self) -> Union[Session, AsyncSession]:
+        return self.session_sync()    
     
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.session_sync().rollback()
+        self.session_sync.close()
+
     async def __aenter__(self) -> AsyncSession:
         return await self.session_async()
 
