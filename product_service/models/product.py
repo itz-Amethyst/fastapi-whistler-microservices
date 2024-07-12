@@ -2,6 +2,9 @@ from sqlalchemy import Column, Float, String, Text
 from common.models.base import BaseModel
 from common.models.pictureMixIn import PictureMixin
 from slugify import slugify 
+from user_service.models.user import User
+from sqlalchemy.orm import relationship 
+
 class Product(BaseModel, PictureMixin):
     
     __tablename__ = "products"
@@ -10,7 +13,7 @@ class Product(BaseModel, PictureMixin):
     slug = Column(String, unique=True, nullable=False)
     description = Column(Text, nullable=True)
     price = Column(Float, nullable=False)
-    
+    seller = relationship(User) 
 
     def __init__(self, name , **kwargs):
         self.name = name
