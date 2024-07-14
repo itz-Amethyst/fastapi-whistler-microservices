@@ -107,6 +107,15 @@ class DBSessionManager:
 
 sessionManager = DBSessionManager()
 
+async def get_db_session_async():
+    async with sessionManager.session_async() as session:
+        yield session
+
+
+def get_db_session_sync():
+    with sessionManager.session_sync() as session:
+        yield session
+
 # Example of using the context manager to perform raw SQL queries
 async def run_queries():
     async with DBSessionManager.connect_async() as connection:
