@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from common.config import settings
 from common.models.pictureMixIn import PictureMixin
-from common.models.session import DBSessionManager, MetaData 
+from common.db.session import DBSessionManager, MetaData 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

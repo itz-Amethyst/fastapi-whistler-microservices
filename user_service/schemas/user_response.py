@@ -37,3 +37,7 @@ class UserReponse(UserInDB):
     #     if totp_secret:
     #         return True
     #     return False
+
+    class Config:
+        # used for having multiple response type like single and plural (list)
+        orm_mode = True
