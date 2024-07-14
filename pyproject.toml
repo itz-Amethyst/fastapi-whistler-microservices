@@ -16,6 +16,7 @@ pydantic-settings = "^2.3.4"
 asyncpg = "^0.29.0"
 alembic = "^1.13.2"
 python-slugify = "^8.0.4"
+pymongo = "^4.8.0"
 
 
 [build-system]
