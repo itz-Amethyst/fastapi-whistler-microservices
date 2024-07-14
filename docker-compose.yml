@@ -16,6 +16,14 @@ services:
     volumes:
       -postgres_data:/var/lib/postgres/data
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      -mongo-data:/data/db
+
   web:
     build: .
     command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
@@ -25,6 +33,7 @@ services:
       -"8000:8000"
     depends_on:
       - db
+      - mongodb
 
   pgadmin:
     container_name: pgadmin
@@ -38,3 +47,4 @@ services:
       - db
 volumes:
   postgres_data
+  mongo-data
