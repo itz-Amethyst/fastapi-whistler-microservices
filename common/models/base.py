@@ -1,6 +1,7 @@
-from common.models.session import Base
+from common.db.session import Base
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer
+from sqlalchemy import DateTime, Integer
+from sqlalchemy.orm import Mapped, mapped_column
 
 def date_time_sec():
     return datetime.now().replace(microsecond=0)
@@ -9,6 +10,6 @@ def date_time_sec():
 class BaseModel(Base):
     __abstract__ = True
     
-    id = Column(Integer, primary_key=True, index=True)
-    created_time = Column(DateTime, default=date_time_sec, nullable=False)
-    modified = Column(DateTime, default=date_time_sec, onupdate=date_time_sec, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    created_time: Mapped[datetime] = mapped_column(DateTime, default=date_time_sec, nullable=False)
+    modified: Mapped[datetime] = mapped_column(DateTime, default=date_time_sec, onupdate=date_time_sec, nullable=True)
