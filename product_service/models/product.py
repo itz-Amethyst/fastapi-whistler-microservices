@@ -1,19 +1,19 @@
-from sqlalchemy import Column, Float, String, Text
+from sqlalchemy import Float, String, Text
 from common.models.base import BaseModel
 from common.models.pictureMixIn import PictureMixin
 from slugify import slugify 
 from user_service.models.user import User
-from sqlalchemy.orm import relationship 
+from sqlalchemy.orm import relationship, Mapped, mapped_column 
 
 class Product(BaseModel, PictureMixin):
     
     __tablename__ = "products"
     
-    name = Column(String, unique=True, index=True, nullable=False)
-    slug = Column(String, unique=True, nullable=False)
-    description = Column(Text, nullable=True)
-    price = Column(Float, nullable=False)
-    seller = relationship(User) 
+    name: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    seller: Mapped[User] = relationship("User") 
 
     def __init__(self, name , **kwargs):
         self.name = name

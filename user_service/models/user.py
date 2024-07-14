@@ -1,17 +1,19 @@
 
 import re
-from sqlalchemy import Boolean, Column, String
+from sqlalchemy import Boolean, String
 from common.models.base import BaseModel
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, mapped_column, Mapped
+
 
 class User(BaseModel):
+    __tablename__ = 'users'
     
-    username = Column(String, nullable=False, unique=True, index=True)
-    email = Column(String, nullable=False, unique=True, index=True)
-    pasword_hash = Column(String, nullable=False)
-    is_verified = Column(Boolean, default=False)
-    is_superuser = Column(Boolean, default=False, nullable=False)
-    verification_token = Column(String, nullable=True, unique=True)
+    username: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    verification_token: Mapped[str] = mapped_column(String, nullable=True, unique=True)
 
 
     # Todo hashing operations
