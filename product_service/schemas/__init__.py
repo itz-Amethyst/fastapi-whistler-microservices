@@ -1,0 +1,1 @@
+from product_service.schemas.product import ProductUpdate, Product, ProductCreate
