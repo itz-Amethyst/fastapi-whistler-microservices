@@ -7,3 +7,5 @@
 
 
 - [ ] **Redis kafka analitics admin(pocketbase) and more ....**
+- [ ] **Rebuild with peewee(more like django orm) or not ?!**
+- [ ] **Implement mutiple image supports for objects**
