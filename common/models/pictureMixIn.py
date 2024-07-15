@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from common.models.contentType import ContentType
 
 class PictureMixin:
-    
+    # decide later to remove this fields or not
     content_type_id = Column(Integer, ForeignKey("content_types.id"), nullable=True)
     object_id = Column(Integer, nullable=True)
     images = relationship("GenericPictures", 
