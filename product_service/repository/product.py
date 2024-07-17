@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from fastapi import UploadFile
 from slugify import slugify
 from sqlalchemy import delete, update, insert, text
@@ -71,16 +71,10 @@ class ProductRepository:
                 return None
             
             product_data = rows[0]
+           
+            product_dict = {k: product_data[k] for k in product_data.keys() if k != "picture_url"} 
             
-            product_dict = {
-                "id": product_data["id"],
-                "name": product_data["name"],
-                "slug": product_data["slug"],
-                "description": product_data["description"],
-                "price": product_data["price"],
-                "seller_id": product_data["seller_id"],
-                "images": []
-            }
+            product_dict['images'] = [] 
             
             for row in rows:
                 if row['picture_url']:
