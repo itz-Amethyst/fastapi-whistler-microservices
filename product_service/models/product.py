@@ -1,4 +1,4 @@
-from sqlalchemy import Float, String, Text
+from sqlalchemy import Float, String, Text, Boolean
 from common.models.base import BaseModel
 from common.models.pictureMixIn import PictureMixin
 from slugify import slugify 
@@ -14,6 +14,7 @@ class Product(BaseModel, PictureMixin):
     description: Mapped[str] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
     seller: Mapped[User] = relationship("User", lazy="joined") 
+    is_deleted: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
 
     def __init__(self, name , **kwargs):
         self.name = name

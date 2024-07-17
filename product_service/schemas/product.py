@@ -34,6 +34,7 @@ class Product(ProductBase):
     slug: str
     seller: Optional[int]
     images: List[Image] = []
-    
+    is_deleted: bool 
+
     class Config:
         orm_mode = True
