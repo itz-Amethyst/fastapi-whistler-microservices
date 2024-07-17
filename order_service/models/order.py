@@ -8,7 +8,7 @@ import uuid
 
 class OrderStatus(Enum):
     PENDING = "Pending"
-    CANCLED = "Cancled"
+    CANCELED = "Canceled"
     ACCEPTED = "Accepted"
 
 
@@ -19,6 +19,7 @@ class Order(BaseModel):
     total_amount: Mapped[float] = mapped_column(Float, nullable=False) 
     status: Mapped[OrderStatus] = mapped_column(SQLAEnum(OrderStatus), default=OrderStatus.PENDING, nullable=False) 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
+
     user: Mapped[User] = relationship("User", back_populates="orders", uselist=False)
     
     # ?! uselist=?!
