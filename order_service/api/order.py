@@ -8,11 +8,11 @@ from order_service.schemas import Order, OrderCreate, OrderUpdate
 router = APIRouter()
 
 
-# @router.get("/products", response_model=List[Product])
-# async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = Depends(DBSessionDepAsync)):
-#     repo = ProductRepository(db)
-#     products = await repo.get_all_products(skip=skip, limit=limit)
-#     return products
+@router.get("/orders", response_model=List[Order])
+async def get_all_orders(skip:int = 0, limit:int = 10, db: AsyncSession = Depends(DBSessionDepAsync)):
+    repo = OrderRepository(db)
+    orders = await repo.get_all_orders(skip=skip, limit=limit)
+    return orders 
 
 # Todo: later add security retrive id dependency
 @router.post("/orders", response_model=Order)

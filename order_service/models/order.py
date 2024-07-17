@@ -6,7 +6,7 @@ from user_service.models.user import User
 from enum import Enum
 import uuid
 
-class OrderStatus(Enum):
+class OrderStatus(str, Enum):
     PENDING = "Pending"
     CANCELED = "Canceled"
     ACCEPTED = "Accepted"
