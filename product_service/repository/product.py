@@ -134,3 +134,31 @@ class ProductRepository:
             print("Something went wrong while fetching product with pictures: {e}")
             return None
         
+    async def get_product_by_slug(self, slug: str) -> Product:
+        try:
+            sql = text(
+                """
+                select * from products
+                where slug = :slug 
+                """
+            )
+            
+            result = await self.session.execute(sql, {"slug": slug})
+        
+            return result.scalar_one()
+        except Exception as e:
+            await self.session.rollback()
+            print("something went wrong while deleting a product: {e}")
+    
+    async def get_product_by_id(self, product_id: int) -> Product:
+        sql = text(
+            """
+            select * from products
+            where id = :product_id
+            """
+        ) 
+
+        result = await self.session.execute(sql, {"product_id": product_id})
+        
+        return result.scalar_one()
+    
