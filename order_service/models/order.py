@@ -13,6 +13,7 @@ class OrderStatus(Enum):
 
 
 class Order(BaseModel):
+    
     # Later can change the ref alghorithm
     reference_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     total_amount: Mapped[float] = mapped_column(Float, nullable=False) 
@@ -22,3 +23,4 @@ class Order(BaseModel):
     
     # ?! uselist=?!
     user = relationship(User, back_populates="orders", uselist=False)
+    order_items = relationship("OrderItems", backref="order")
