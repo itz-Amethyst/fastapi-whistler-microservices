@@ -13,6 +13,7 @@ class ProductRepository:
     
     def __init__(self, sess: Session) -> None:
         self.session: Session = sess
+        self.generic_picture_repo = GenericPictureRepository(session=sess)
 
 
     #fix seller_id later to retrieve real data
@@ -29,8 +30,7 @@ class ProductRepository:
             product_id = result.fetchone()[0]
             
             if picture:
-                generic_repo = GenericPictureRepository(session= self.session)
-                generic_repo.add_picture(product_id, picture, model_name = Product.__tablename__)
+                await self.generic_picture_repo.add_picture(product_id, picture, model_name = Product.__tablename__)
 
             await self.session.commit()
 
@@ -52,6 +52,49 @@ class ProductRepository:
             return [] 
 
 
+    async def update_product(self, product_id: int, details: Dict[str, Any] , picture: UploadFile = None) -> bool:
+        try:
+            set_clause = ", ".join([f"{key} = :{key}" for key in details.keys()])
+            sql = text(
+                    f"""
+                        update products
+                        set {set_clause}
+                        where id = :product_id
+                    """
+            ) 
+            # Todo not sure
+            parameters = {"product_id": product_id}
+            parameters.update(details)
+            await self.session.execute(sql, parameters)
+            
+            if picture:
+                await self.generic_picture_repo.add_picture(product_id, picture)
+            await self.session.commit()
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            print("something went wrong while updating product: {e}")
+            return False
+
+    async def delete_product(self, product_id: int) -> bool:
+        try:
+            sql = text(
+                """
+                update products
+                set is_deleted = True
+                where id = :product_id
+                """
+            )
+            
+            await self.session.execute(sql, {"product_id": product_id})
+            await self.session.commit()
+            return True
+        
+        except Exception as e:
+            await self.session.rollback()
+            print("something went wrong while deleting a product: {e}")
+            return False
+            
     async def get_product_with_pictures(self, product_id: int) -> Optional[Product]:
         try:
             sql = text(
