@@ -1,12 +1,14 @@
 from typing import List
 import uuid
 from common.models.base import BaseModel
+from pydantic import UUID4 
+from order_service.models.order import OrderStatus
 from order_service.schemas import OrderItemCreate, OrderItem , OrderItemUpdate
 
 class OrderBase(BaseModel):
-    reference_id : uuid.UUID
+    reference_id : UUID4 
     total_amount: float
-    status: str
+    status: OrderStatus 
     user_id: int
     
 class OrderCreate(OrderBase):

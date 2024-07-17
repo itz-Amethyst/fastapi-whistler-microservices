@@ -13,8 +13,8 @@ class Product(BaseModel, PictureMixin):
     slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    seller: Mapped[User] = relationship("User", lazy="joined") 
-    is_deleted: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
+    seller = relationship("User", lazy="joined") 
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     def __init__(self, name , **kwargs):
         self.name = name
