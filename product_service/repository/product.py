@@ -134,6 +134,49 @@ class ProductRepository:
             print("Something went wrong while fetching product with pictures: {e}")
             return None
         
+    async def get_all_products_with_pictures(self) -> List[Product]:
+        try:
+            sql = text(
+                """
+                select p.id, p.name, p.slug, p.description, p.price, p.seller_id,
+                       gp.picture_url, gp.content_type_id, gp.object_id
+                from products p
+                left join generic_pictures gp on p.id = gp.object_id
+                """
+            )
+            
+            result = await self.session.execute(sql)
+            rows = result.fetchall()
+
+            products = []
+            current_product_id = None
+            current_product_dict = None
+            
+            for row in rows:
+                if row['id'] != current_product_id:
+                    if current_product_dict:
+                        products.append(Product(**current_product_dict))
+                    current_product_id = row['id']
+                    current_product_dict = {k: row[k] for k in row.keys() if k != "picture_url"}
+                    current_product_dict['images'] = []
+
+                if row['picture_url']:
+                    image = Image(
+                        picture_url=row['picture_url'],
+                        content_type_id=row["content_type_id"],
+                        object_id=row['object_id']
+                    )
+                    current_product_dict['images'].append(image)
+            
+            if current_product_dict:
+                products.append(Product(**current_product_dict))
+                    
+            return products
+        except Exception as e:
+            await self.session.rollback()
+            print(f"Something went wrong while fetching all products with pictures: {e}")
+            return []
+    
     async def get_product_by_slug(self, slug: str) -> Product:
         try:
             sql = text(
