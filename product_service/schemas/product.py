@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import List, Optional
 from fastapi import UploadFile
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 from slugify import slugify
-
+from common.schemas.base import BaseModel
 from common.schemas.image import Image 
 
 
