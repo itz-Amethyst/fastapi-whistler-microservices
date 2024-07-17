@@ -149,17 +149,23 @@ class OrderRepository:
             
             orders = []
             current_order_id = None
-            current_order = None
-            # Todo: FIX THIS 
+            current_order_rows = [] 
             
             for row in rows:
                 if row['id'] != current_order_id:
-                    if current_order:
-                        orders.append(Order(**current_order))
-                    current_order_id = row['id']
-                    current_order = self._extract_order_data([row])
-                    current_order
+                    if current_order_rows:
+                        order_data = self._extract_order_data(current_order_rows)
+                        orders.append(Order(**order_data))
 
+                    current_order_id = row['id']
+                    current_order_rows = []
+                current_order_rows.append(row)
+
+            if current_order_rows:
+                order_data = self._extract_order_data(current_order_rows)
+                orders.append(Order(**order_data))
+
+            return orders
         except Exception as e:
             print(f"Error fetching all orders: {e}")
             return []
