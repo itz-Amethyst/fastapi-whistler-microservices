@@ -6,7 +6,8 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from datetime import datetime
 from common.schemas.image import Image
-from product_service.models.product import Product, Product
+from product_service.models.product import Product as ProductModel
+from product_service.schemas import Product 
 from common.repository.genericPicture import GenericPictureRepository
 
 class ProductRepository:
@@ -30,7 +31,7 @@ class ProductRepository:
             product_id = result.fetchone()[0]
             
             if picture:
-                await self.generic_picture_repo.add_picture(product_id, picture, model_name = Product.__tablename__)
+                await self.generic_picture_repo.add_picture(product_id, picture, model_name = ProductModel.__tablename__)
 
             await self.session.commit()
 
@@ -52,7 +53,7 @@ class ProductRepository:
             return [] 
 
 
-    async def update_product(self, product_id: int, details: Dict[str, Any] , picture: UploadFile = None) -> bool:
+    async def update_product(self, product_id: int, details: Dict[str, Any] , picture: UploadFile = None) -> Product:
         try:
             set_clause = ", ".join([f"{key} = :{key}" for key in details.keys()])
             sql = text(
@@ -60,20 +61,22 @@ class ProductRepository:
                         update products
                         set {set_clause}
                         where id = :product_id
+                        returning *
                     """
             ) 
             # Todo not sure
             parameters = {"product_id": product_id}
             parameters.update(details)
-            await self.session.execute(sql, parameters)
-            
+            result = await self.session.execute(sql, parameters)
+            updated_product = result.scalar_one() 
+
             if picture:
                 await self.generic_picture_repo.add_picture(product_id, picture)
             await self.session.commit()
-            return True
+            return updated_product 
         except Exception as e:
             await self.session.rollback()
-            print("something went wrong while updating product: {e}")
+            print(f"something went wrong while updating product: {e}")
             return False
 
     async def delete_product(self, product_id: int) -> bool:
@@ -92,7 +95,7 @@ class ProductRepository:
         
         except Exception as e:
             await self.session.rollback()
-            print("something went wrong while deleting a product: {e}")
+            print(f"something went wrong while deleting a product: {e}")
             return False
             
     async def get_product_with_pictures(self, product_id: int) -> Optional[Product]:
@@ -191,7 +194,7 @@ class ProductRepository:
             return result.scalar_one()
         except Exception as e:
             await self.session.rollback()
-            print("something went wrong while deleting a product: {e}")
+            print(f"something went wrong while deleting a product: {e}")
     
     async def get_product_by_id(self, product_id: int) -> Product:
         sql = text(
