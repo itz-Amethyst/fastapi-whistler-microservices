@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -106,7 +107,63 @@ class OrderRepository:
             print(f"Error fetching order by id: {e}")
             return None 
     
+    async def get_order_by_reference_id(self, reference_id: uuid.UUID) -> Optional[Order]:
+        try:
+            sql = text(
+                """
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id,
+                   oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
+                from orders o
+                left join order_items oi on o.id = oi.order_id
+                where o.reference_id = :reference_id
+                """
+            )
+            result = await self.session.execute(sql, {"reference_id": reference_id})
+            rows = result.fetchall()
+            
+            if not rows:
+                return None
+            
+            order_data = self._extract_order_data(rows)
+            return Order(**order_data)            
+
+        except Exception as e:
+            print(f"Error fetching order by reference_id: {e}")
+            return None 
+        
     
+    async def get_all_orders(self, skip: int = 0, limit: int = 10) -> list[Order]:
+        try:
+            sql = text(
+                """
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id,
+                   oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
+                from orders o
+                left join order_items oi on o.id = oi.order_id
+                order by o.id
+                offset :skip limit :limit
+                """
+            )
+            result = await self.session.execute(sql, {"skip": skip, "limit": limit})
+            rows = result.fetchall()
+            
+            orders = []
+            current_order_id = None
+            current_order = None
+            # Todo: FIX THIS 
+            
+            for row in rows:
+                if row['id'] != current_order_id:
+                    if current_order:
+                        orders.append(Order(**current_order))
+                    current_order_id = row['id']
+                    current_order = self._extract_order_data([row])
+                    current_order
+
+        except Exception as e:
+            print(f"Error fetching all orders: {e}")
+            return []
+
     def _extract_order_data(self, rows) -> dict:
         order_data = dict(rows[0])
         order_items = [
