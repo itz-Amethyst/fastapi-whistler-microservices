@@ -5,6 +5,8 @@ from product_service.repository.product import ProductRepository
 from product_service.schemas import Product, ProductCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from product_service.schemas.product import ProductUpdate
+
 router = APIRouter()
 
 
@@ -29,7 +31,7 @@ async def get_product_by_id(product_id :int, db: AsyncSession = Depends(DBSessio
     repo = ProductRepository(db)
     product = await repo.get_product_by_id(product_id)
     if not product:
-        raise HTTPException(status=404, detail="Product with id {product_id} not found")
+        raise HTTPException(status=404, detail=f"Product with id {product_id} not found")
     return product
 
 @router.get("/products/{product_slug}", response_model=Product)
@@ -37,7 +39,7 @@ async def get_product_by_slug(product_slug : str, db: AsyncSession = Depends(DBS
     repo = ProductRepository(db)
     product = await repo.get_product_by_slug(product_slug)
     if not product:
-        raise HTTPException(status=404, detail="Product with id {product_id} not found")
+        raise HTTPException(status=404, detail=f"Product with slug {product_slug} not found")
     return product
 
 
@@ -45,6 +47,24 @@ async def get_product_by_slug(product_slug : str, db: AsyncSession = Depends(DBS
 async def get_all_products_with_picture(db: AsyncSession = Depends(DBSessionDepAsync)):
     repo = ProductRepository(db)
     products = await repo.get_all_products_with_pictures()
-    if not products:
-        raise HTTPException(status=404, detail="Product with id {product_id} not found")
     return products
+
+@router.delete("/products/{product_id}", response_model=bool)
+async def delete_product(product_id: int, db: AsyncSession = Depends(DBSessionDepAsync)):
+    repo = ProductRepository(db)
+    success = await repo.delete_product(product_id)
+    if not success:
+        raise HTTPException(status=404, detail=f"Product with id {product_id} not found")
+    return success 
+
+
+@router.put("/products/{product_id}", response_model=Product)
+async def update_product(product_id: int, details: ProductUpdate, picture: UploadFile = None, db: AsyncSession = Depends(DBSessionDepAsync)):
+    repo = ProductRepository(db)
+    try:
+        updated_product = await repo.update_product(product_id, details, picture)
+        if not updated_product:
+            raise HTTPException(status=404, detail=f"Product with id {product_id} not found")
+        return updated_product
+    except Exception as e:
+        raise HTTPException(status=500, detail=f"Failed to update {product_id}")
