@@ -99,20 +99,24 @@ class OrderRepository:
             if not rows:
                 return None
             
-            order_data = dict(rows[0])
-            order_items = [
-                {
-                    "id": row["order_item_id"],
-                    "product_id": row["product_id"],
-                    "quantity": row["quantity"],
-                    "product_price": row["product_price"]
-                    
-                } for row in rows if row['order_item_id']
-            ] 
-
-            order_data['order_items'] = order_items
+            order_data = self._extract_order_data(rows)
             return Order(**order_data)            
 
         except Exception as e:
             print(f"Error fetching order by id: {e}")
             return None 
+    
+    
+    def _extract_order_data(self, rows) -> dict:
+        order_data = dict(rows[0])
+        order_items = [
+            {
+                "id": row["order_item_id"],
+                "product_id": row["product_id"],
+                "quantity": row["quantity"],
+                "product_price": row["product_price"]
+                
+            } for row in rows if row['order_item_id']
+        ] 
+        order_data['order_items'] = order_items
+        return order_data
