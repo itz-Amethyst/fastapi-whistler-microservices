@@ -62,4 +62,57 @@ class OrderRepository:
 
         except Exception as e:
             await self.session.rollback()
-            print(f"Something went worng while creating order: {e}")
+            print(f"Something went worng while updating order: {e}")
+    
+    async def delete_order(self, order_id: int) -> bool:
+        try:
+            await self.orderItemsRepo.delete_order_items(order_id)
+            sql = text(
+                """
+                delete from orders where id = :order_id 
+                """
+            )
+
+            await self.session.execute(sql, {"order_id": order_id})
+            await self.session.commit()
+            return True
+        
+        except Exception as e:
+            await self.session.rollback()
+            print(f"Something went worng while deleting order: {e}")
+            return False
+    
+    async def get_order_by_id(self, order_id: int) -> Optional[Order]:
+        try:
+            sql = text(
+                """
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id,
+                   oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
+                from orders o
+                left join order_items oi on o.id = oi.order_id
+                where o.id = :order_id
+                """
+            )
+            result = await self.session.execute(sql, {"order_id": order_id})
+            rows = result.fetchall()
+            
+            if not rows:
+                return None
+            
+            order_data = dict(rows[0])
+            order_items = [
+                {
+                    "id": row["order_item_id"],
+                    "product_id": row["product_id"],
+                    "quantity": row["quantity"],
+                    "product_price": row["product_price"]
+                    
+                } for row in rows if row['order_item_id']
+            ] 
+
+            order_data['order_items'] = order_items
+            return Order(**order_data)            
+
+        except Exception as e:
+            print(f"Error fetching order by id: {e}")
+            return None 
