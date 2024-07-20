@@ -16,3 +16,5 @@
 - [ ] **MongoDb**
 - [ ] **Oauth 2**
 
+
+- [ ] **Migrate to Rye or UV instead of poetry**

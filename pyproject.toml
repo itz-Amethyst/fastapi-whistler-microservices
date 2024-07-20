@@ -17,6 +17,7 @@ asyncpg = "^0.29.0"
 alembic = "^1.13.2"
 python-slugify = "^8.0.4"
 pymongo = "^4.8.0"
+beanie = "^1.26.0"
 
 
 [build-system]
