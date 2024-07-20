@@ -18,7 +18,7 @@ def load_models_from_given_path(module_name: str) -> List[Type[Document]]:
 
 async def create_db_connection():
    global client
-   client = AsyncIOMotorClient(settings.FULL_MONGODB_URL)
+   client = AsyncIOMotorClient(settings.FULL_MONGODB_URL,tls=True,tlsallowinvalidcertificates=True)
    document_models = load_models_from_given_path('discount_service.models')
    print("Connecting ...")
    print(document_models)
