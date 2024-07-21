@@ -78,7 +78,6 @@ def list_discounts(client):
     return response.json()
 
 # Create discount to save the id for further operations
-@pytest.mark.asyncio
 def test_setup(client):
     global discount_id
     discount_data = {
@@ -93,26 +92,22 @@ def test_setup(client):
     assert discount_id is not None
     assert create_response.get('status') == True
     
-@pytest.mark.asyncio
 def test_read_discount(client):
     test_setup(client)
     response = read_discount(client, discount_id)
     assert response["code"] == "TEST"
 
-@pytest.mark.asyncio
 def test_update_discount(client):
     test_setup(client)
     update_data = {"code": "UPDATED10"}
     response = update_discount(client, discount_id, update_data)
     assert response["code"] == "UPDATED10"
 
-@pytest.mark.asyncio
 def test_delete_discount(client):
     test_setup(client)
     response = delete_discount(client, discount_id)
     assert response["detail"] == "Discount deleted"
 
-@pytest.mark.asyncio
 def test_list_discounts(client):
     response = list_discounts(client)
     assert len(response) > 0
