@@ -20,6 +20,12 @@ pymongo = "^4.8.0"
 beanie = "^1.26.0"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.1"
+aiohttp = "^3.9.5"
+pytest-asyncio = "^0.23.8"
+requests = "^2.32.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
