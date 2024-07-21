@@ -16,6 +16,7 @@ async def create_discount(discount: CreateDiscount):
     
     if not result['status']:
         raise HTTPException(status_code=500, detail="Failed to create discount")
+    return result
 
 @router.get("/discounts/{discount_id}", response_model=Discount)
 async def read_discount(discount_id: str):
