@@ -8,11 +8,14 @@ from discount_service.schemas import CreateDiscount, UpdateDiscount, Discount
 router = APIRouter()
 repository = DiscountRepository()
 
-@router.post("/discounts/", response_model=bool)
+@router.post("/discounts/", response_model=dict)
 async def create_discount(discount: CreateDiscount):
     discount = DiscountModel(**discount.model_dump())
     print(discount)
-    return await repository.create(discount)
+    result = await repository.create(discount)
+    
+    if not result['status']:
+        raise HTTPException(status_code=500, detail="Failed to create discount")
 
 @router.get("/discounts/{discount_id}", response_model=Discount)
 async def read_discount(discount_id: str):

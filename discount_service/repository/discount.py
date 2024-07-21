@@ -9,8 +9,8 @@ class DiscountRepository:
             await discount.insert()
         except Exception as e:
             print(e)
-            return False 
-        return True
+            return {"id": "", "status": False}
+        return {"id": str(discount.id), "status": True}
 
     async def get(self, discount_id: str) -> Optional[DiscountResponse]:
         try:
@@ -24,10 +24,9 @@ class DiscountRepository:
 
     async def update(self, discount_id: str, update_data: dict) -> Optional[DiscountResponse]:
         try:
-            discount = await self.get(discount_id)
+            discount = await Discount.get(ObjectId(discount_id))
             if not discount:
                 return None
-
             await discount.update({"$set": update_data})
             return await self.get(discount_id)
         except Exception as e:
