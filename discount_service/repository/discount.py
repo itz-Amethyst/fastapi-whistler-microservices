@@ -14,7 +14,10 @@ class DiscountRepository:
 
     async def get(self, discount_id: str) -> Optional[DiscountResponse]:
         try:
-            return await Discount.get(ObjectId(discount_id))
+            discount = await Discount.get(ObjectId(discount_id))
+            if discount:
+                discount.id = str(discount.id)
+            return discount
         except Exception as e:
             # Handle or log the error as needed
             return None
@@ -33,15 +36,21 @@ class DiscountRepository:
 
     async def delete(self, discount_id: str) -> bool:
         try:
-            result = await Discount.delete_one(Discount.id == ObjectId(discount_id))
-            return result.deleted_count > 0
+            discount = await Discount.find_one(Discount.id == ObjectId(discount_id))
+            if not discount:
+                return False
+            await discount.delete()
+            return True
         except Exception as e:
             # Handle or log the error as needed
             return False
 
     async def list(self, limit: int = 100, skip: int = 0) -> List[DiscountResponse]:
         try:
-            return await Discount.find().skip(skip).limit(limit).to_list()
+            discounts = await Discount.find().skip(skip).limit(limit).to_list()
+            for discount in discounts:
+                discount.id = str(discount.id)
+            return discounts
         except Exception as e:
             # Handle or log the error as needed
             return []
