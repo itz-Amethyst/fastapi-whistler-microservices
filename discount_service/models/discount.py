@@ -16,6 +16,6 @@ class Discount(Document):
 
     class Settings:
         name = 'discounts'
-        use_cache = True
+        # use_cache = True
         # cache_expiration_time = datetime.timedelta(seconds=10)
     #     cache_capacity = 10
