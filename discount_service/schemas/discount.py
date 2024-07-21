@@ -1,12 +1,19 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
-from pydantic import BaseModel, field_validator, model_validator, validator
+from typing import Annotated, Optional
+from bson import ObjectId
+from fastapi.encoders import ENCODERS_BY_TYPE
+from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator, validator
 
+def objectid_encoder(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    raise TypeError(f"Unserializable object {obj} of type {type(obj)}")
 
+ENCODERS_BY_TYPE[ObjectId] = objectid_encoder
 
 class DiscountBase(BaseModel):
     # todo objectid
-    # id: str
+    id: Optional[str]
     code: str
     use_count: int
     start_date: datetime
@@ -15,7 +22,10 @@ class DiscountBase(BaseModel):
 
     class Config:
         orm_mode = True
-        
+        json_encoders = {
+            ObjectId: objectid_encoder
+        }
+
 class DiscountBaseWValidation(BaseModel):
     _id: int
     code: str
@@ -53,10 +63,11 @@ class CreateDiscount(DiscountBaseWValidation):
     pass
 
 class Discount(DiscountBase):
-
     class Config:
         orm_mode = True
-        
+        json_encoders = {
+            ObjectId: objectid_encoder
+        } 
 # Todo
 class UpdateDiscount(BaseModel):
     code: Optional[str]
