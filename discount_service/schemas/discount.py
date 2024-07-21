@@ -68,13 +68,36 @@ class Discount(DiscountBase):
         json_encoders = {
             ObjectId: objectid_encoder
         } 
-# Todo
+
 class UpdateDiscount(BaseModel):
-    code: Optional[str]
-    use_count: Optional[int]
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
-    percentage: Optional[float]
+    code: Optional[str] = None
+    use_count: Optional[int] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    percentage: Optional[float] = None
+
+    @validator("end_date", pre=True, always=True)
+    def end_date_validate(cls, v, values):
+        start_date = values.get("start_date")
+        if start_date and v:
+            if isinstance(start_date, datetime) and isinstance(v, datetime):
+                if start_date.tzinfo is None:
+                    start_date = start_date.replace(tzinfo=timezone.utc)
+                if v.tzinfo is None:
+                    v = v.replace(tzinfo=timezone.utc)
+                if v <= start_date:
+                    raise ValueError("end_date must be after start_date")
+        return v
+
+    @validator("start_date", pre=True, always=True)
+    def start_date_validate(cls, v):
+        if v:
+            now = datetime.now(timezone.utc)
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            if v < now - timedelta(seconds=5):
+                raise ValueError("start_date must be in the future")
+        return v
 
     class Config:
         orm_mode = True
