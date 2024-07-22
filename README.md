@@ -1,6 +1,9 @@
 ### TODOS:
 
 - [x] **Context manager both sync and async support**
+- [] **Finish User_Service**
+- [] **Can use external applications like (Auth0, keycloak) for enablin scope permission validating**
+- [] **Introduce and add totp section for users to work just like Google authentication and can be toggled**
 - [ ] **having separate database for each services**
 - [ ] **Implement Alembic env for each servies**
 
