@@ -18,6 +18,8 @@ alembic = "^1.13.2"
 python-slugify = "^8.0.4"
 pymongo = "^4.8.0"
 beanie = "^1.26.0"
+captcha = "^0.6.0"
+itsdangerous = "^2.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
