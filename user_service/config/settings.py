@@ -6,6 +6,7 @@ from common.config.helper import DOTENV
 class Settings(BaseSettings):
     VERIFICATION_METHOD: str = "OTP"
     PASSWORD_CRYPT_ALGO: str = "bcrypt"
+    OTP_SECRET_KEY: str
 
     class Config:
         env_flie = DOTENV
