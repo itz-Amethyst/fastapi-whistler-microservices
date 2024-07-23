@@ -1,11 +1,15 @@
-from pydantic import BaseModel, EmailStr, StringConstraints
+from pydantic import EmailStr, StringConstraints
+from common.schemas.base import BaseModel
 from typing import Annotated, Optional
 from datetime import datetime
 
 
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
+    email_verified: Optional[bool] = False
     is_superuser: Optional[bool] = False
+    is_active: Optional[bool] = True
+    user_name: Optional[str] = ""
 
 class UserCreate(UserBase):
     username: str
@@ -19,7 +23,7 @@ class UserUpdate(UserBase):
 
     
 class UserLogin(UserBase):
-    # username: str
+    username: str
     # login through username or email decide later
-    email: EmailStr
+    # email: EmailStr
     password: str
