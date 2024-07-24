@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     VERIFICATION_METHOD: str = "OTP"
     PASSWORD_CRYPT_ALGO: str = "bcrypt"
     OTP_SECRET_KEY: str
+    FIRST_SUPERUSER_NAME: str
+    FIRST_SUPERUSER_PASSWORD: str
 
     class Config:
         env_flie = DOTENV
