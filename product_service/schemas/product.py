@@ -3,8 +3,8 @@ from typing import List, Optional
 from fastapi import UploadFile
 from pydantic import Field, field_validator
 from slugify import slugify
-from common.schemas.base import BaseModel
-from common.schemas.image import Image 
+from common.schemes.base import BaseModel
+from common.schemes.image import Image 
 
 
 
