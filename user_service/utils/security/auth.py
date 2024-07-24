@@ -6,6 +6,9 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
 from user_service.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from user_service.repository.user import UserRepository
 
 TFA_RECOVERY_ALPHABET = "23456789BCDFGHJKMNPQRTVWXY".lower()  
 TFA_RECOVERY_LENGTH = 5 
@@ -43,10 +46,11 @@ def check_selective_scopes(request, scope, token):
 
 
 class AuthDependency(OAuth2PasswordBearer):
-    def __init__(self, enabled: bool = True, token_required: bool = True, token: Optional[str] = None, return_token=False):
+    def __init__(self, session: AsyncSession, enabled: bool = True, token_required: bool = True, token: Optional[str] = None, return_token=False):
         self.enabled = enabled
         self.return_token = return_token
         self.token = token
+        self.session = session
         super().__init__(
             **oauth_kwargs,
             auto_error=token_required,
@@ -71,12 +75,10 @@ class AuthDependency(OAuth2PasswordBearer):
         )
         if not token:
             raise exc
-        data = (
-            await models.User.join(models.Token)
-            .select(models.Token.id == token)
-            .gino.load((models.User, models.Token))
-            .first()
-        )
+        
+        user_repo = UserRepository(self.session)
+        data = user_repo.get_user_and_token(token)
+
         if data is None:
             raise exc
         user, token = data  # first validate data, then unpack
