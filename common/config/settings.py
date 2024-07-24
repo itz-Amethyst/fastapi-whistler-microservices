@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     FULL_MONGODB_URL: str
     PGADMIN_DEFAULT_EMAIL: str
     PGADMIN_DEFAULT_PASSWORD: str
+    LOG_LEVEL: str = "WARNING"
+    DEBUG: str = True
 
     class Config:
         env_file = DOTENV
