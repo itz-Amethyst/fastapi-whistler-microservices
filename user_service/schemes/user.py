@@ -1,5 +1,5 @@
 from pydantic import EmailStr, StringConstraints
-from common.schemas.base import BaseModel
+from common.schemes.base import BaseModel
 from typing import Annotated, Optional
 from datetime import datetime
 

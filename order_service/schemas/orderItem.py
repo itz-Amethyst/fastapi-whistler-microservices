@@ -1,4 +1,4 @@
-from common.schemas.base import BaseModel
+from common.schemes.base import BaseModel
 
 class OrderItemBase(BaseModel):
     product_id: int
