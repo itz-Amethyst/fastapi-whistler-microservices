@@ -20,8 +20,6 @@ class Order(BaseModel):
     status: Mapped[OrderStatus] = mapped_column(SQLAEnum(OrderStatus), default=OrderStatus.PENDING, nullable=False) 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
 
-    user: Mapped[User] = relationship("User", back_populates="orders", uselist=False)
-    
     # ?! uselist=?!
     user = relationship(User, back_populates="orders", uselist=False)
     order_items = relationship("OrderItems", backref="order")

@@ -4,12 +4,13 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from passlib.context import CryptContext
 from starlette.requests import Request
-from starlette.status import HTTP_403_FORBIDDEN
+from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
+from user_service.config import settings
 
 TFA_RECOVERY_ALPHABET = "23456789BCDFGHJKMNPQRTVWXY".lower()  
 TFA_RECOVERY_LENGTH = 5 
 
-pwd_context = CryptContext(schemes=[], deprecated="auto")
+pwd_context = CryptContext(schemes=[settings.PASSWORD_CRYPT_ALGO], deprecated="auto")
 
 def generate_two_factor_recovery_code():
     return (

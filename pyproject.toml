@@ -21,6 +21,7 @@ beanie = "^1.26.0"
 captcha = "^0.6.0"
 itsdangerous = "^2.2.0"
 passlib = "^1.7.4"
+structlog = "^24.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
