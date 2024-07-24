@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import ConfigDict, Field, SecretStr, field_validator
 
-from user_service.schemas.user import UserBase
+from user_service.schemes.user import UserBase
 
 
 class UserInDBBase(UserBase):
