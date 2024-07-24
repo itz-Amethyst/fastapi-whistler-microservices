@@ -1,20 +1,72 @@
-
+import json
 import re
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from common.models.base import BaseModel
-from sqlalchemy.orm import validates, mapped_column, Mapped
+from sqlalchemy.orm import validates, mapped_column, Mapped, relationship
 
 
-class User(BaseModel):
+class BaseModelUser(BaseModel):
+    __abstract__ = True
+    JSON_KEYS = {}
+
+    async def add_fields(self):
+        for field, scheme in self.JSON_KEYS.items():
+            setattr(self, field, self.get_json_key(field, scheme))
+
+    async def load_data(self):
+        await self.add_related()
+        await self.add_fields()
+
+    async def _delete(self, *args, **kwargs):
+        await self.delete_related()
+        return await super().delete(*args, **kwargs)
+
+    @classmethod
+    async def create(cls, **kwargs):
+        model = await super().create(**kwargs)
+        await model.load_data()
+        return model
+
+    @classmethod
+    def process_kwargs(cls, kwargs):
+        return kwargs
+
+    @classmethod
+    def prepare_create(cls, kwargs):
+        kwargs["id"] = cls.generate_unique_id()
+        if "metadata" not in kwargs and getattr(cls, "METADATA", False):
+            kwargs["metadata"] = {}
+        return kwargs
+
+    def prepare_edit(self, kwargs):
+        kwargs.pop("user_id", None) 
+        return kwargs
+
+    def get_json_key(self, key, scheme):
+        data = getattr(self, key) or {}
+        return scheme(**data)
+
+    async def set_json_key(self, key, scheme):
+        json_data = json.dumps(getattr(self, key))
+        kwargs = {key: json_data}
+        await self.update(**kwargs) 
+
+
+
+class User(BaseModelUser):
     __tablename__ = 'users'
-    
-    username: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
-    email: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+
+    username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
-    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    totp_code = mapped_column(Text, nullable=False)
+    tfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    verification_token: Mapped[str] = mapped_column(String, nullable=True, unique=True)
+    token_id: Mapped[int] = mapped_column(ForeignKey('tokens.id'), nullable=True)
+
+    token = relationship("Token", back_populates="users")
 
 
     # Todo hashing operations
