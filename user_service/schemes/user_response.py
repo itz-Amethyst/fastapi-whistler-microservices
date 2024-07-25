@@ -18,7 +18,7 @@ class UserReponse(UserInDBBase):
     is_superuser: bool
     is_active: bool
     email_verified: bool
-    tfa_enabled: bool
+    # tfa_enabled: bool
     # totp_secret: bool = Field(default= False, alias = "password")
     model_config = ConfigDict(populate_by_name=True)
 
