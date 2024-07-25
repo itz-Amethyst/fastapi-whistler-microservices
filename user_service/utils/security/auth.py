@@ -9,6 +9,7 @@ from user_service.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from user_service.repository.user import UserRepository
+from user_service.utils.security.token import decode_access_token
 
 TFA_RECOVERY_ALPHABET = "23456789BCDFGHJKMNPQRTVWXY".lower()  
 TFA_RECOVERY_LENGTH = 5 
@@ -21,7 +22,8 @@ def generate_two_factor_recovery_code():
         + "-"
         + "".join(secrets.choice(TFA_RECOVERY_ALPHABET) for i in range(TFA_RECOVERY_ALPHABET))
     )
-
+    
+# Note the scopes are static here find a better way to make them dynamic
 oauth_kwargs = {
     "tokenUrl": "/token/oauth2",
     "scopes": {
@@ -60,49 +62,55 @@ class AuthDependency(OAuth2PasswordBearer):
 
     async def _process_request(self, request: Request, security_scopes: SecurityScopes):
         if not self.enabled:
-            if self.return_token:  # pragma: no cover
+            if self.return_token:
                 return None, None
             return None
+
         if security_scopes.scopes:
             authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
         else:
             authenticate_value = "Bearer"
+
         token: str = self.token if self.token else await super().__call__(request)
         exc = HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": authenticate_value},
         )
+
         if not token:
             raise exc
-        
-        user_repo = UserRepository(self.session)
-        data = user_repo.get_user_and_token(token)
 
-        if data is None:
+        try:
+            decoded_token = decode_access_token(token)
+        except ValueError:
             raise exc
-        user, token = data  # first validate data, then unpack
-        await user.load_data()
-        if not user.is_enabled:
-            raise HTTPException(403, "Account is disabled")
+
+        user_id = decoded_token.get("sub")
+        scopes = decoded_token.get("scopes", [])
+
+        user_repo = UserRepository(self.session)
+        user = await user_repo.get_user_by_id(user_id)
+
+        if not user or not user.is_enabled:
+            raise HTTPException(status_code=403, detail="Account is disabled")
+
         forbidden_exception = HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
+            status_code=403,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": authenticate_value},
         )
-        if "full_control" not in token.permissions:
-            for scope in security_scopes.scopes:
-                if scope not in token.permissions and not check_selective_scopes(request, scope, token):
-                    # add log for this
-                    # await run_hook("permission_denied", user, token, scope)
-                    raise forbidden_exception
+
+        for scope in security_scopes.scopes:
+            if scope not in scopes:
+                raise forbidden_exception
+
         if "server_management" in security_scopes.scopes and not user.is_superuser:
-            # add log for this
-            # await run_hook("permission_denied", user, token, "server_management")
             raise forbidden_exception
-        # await run_hook("permission_granted", user, token, security_scopes.scopes)
+
         if self.return_token:
             return user, token
+
         return user
 
     async def __call__(self, request: Request, security_scopes: SecurityScopes):
@@ -114,3 +122,6 @@ class AuthDependency(OAuth2PasswordBearer):
             if self.return_token:
                 return None, None
             return None
+        
+auth_dependency = AuthDependency()
+optional_auth_dependency = AuthDependency(token_required=False)
