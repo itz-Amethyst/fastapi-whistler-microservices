@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_NAME: str
     FIRST_SUPERUSER_PASSWORD: str
 
+    ACCESS_TOKEN_EXPIRE_MINUTES: str
+    SECRET_KEY: str
+    ALGORITHM: str
+    
     class Config:
         env_flie = DOTENV
     

@@ -59,15 +59,11 @@ class User(BaseModelUser):
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
-    totp_code = mapped_column(Text, nullable=False)
-    tfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # totp_code = mapped_column(Text, nullable=False)
+    # tfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    token_id: Mapped[int] = mapped_column(ForeignKey('tokens.id'), nullable=True)
-
-    token = relationship("Token", back_populates="users")
-
 
     # Todo hashing operations
 
@@ -78,6 +74,9 @@ class User(BaseModelUser):
             raise ValueError("Invalid email address: {email}")
         
         return email
-    
+    # Todo change this 
+    def verify_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.hashed_password.encode('utf-8'))
+
     def __repr__(self):
         return f"User: {self.username}, email={self.email}, is_verified: {self.is_verified}"
