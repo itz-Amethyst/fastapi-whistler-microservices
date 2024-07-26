@@ -15,7 +15,9 @@ async def login(user: UserCreate, db: AsyncSession = Depends(DBSessionDepAsync))
     if existing_user is None or not existing_user.verify_password(user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    scopes = ['full_control'] if existing_user.is_superuser else [scope.title for scope in existing_user.scopes]
     # Decide later about scope
-    token = create_access_token(subject=user.username, scopes=["full_control"])
+    token = create_access_token(subject=user.username, scopes=scopes)
+    # Refresh token ? where is it
     return {"access_token": token, "token_type": "bearer"}
 
