@@ -1,10 +1,7 @@
-import base64
-import hashlib
 import json
 import re
-import secrets
 from typing import List
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, String 
 from common.models.base import BaseModel
 from sqlalchemy.orm import validates, mapped_column, Mapped, relationship
 from user_service.config import settings
@@ -82,16 +79,6 @@ class User(BaseModelUser):
     def get_scope_names(self) -> List[str]:
         return [scope.name for scope in self.scopes]
     
-    def hash_password(password, salt=None, iterations=600000):
-        if salt is None:
-            salt = secrets.token_hax(16)
-        assert salt and isinstance(salt, str) and "$" not in salt
-        assert isinstance(password, str)
-        pw_hash = hashlib.pbkdf2_hmac(
-            "sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations
-        )
-        b64_hash = base64.b64encode(pw_hash).decode("ascii").strip()
-        return "{}${}${}${}".format(settings.PASSWORD_HASH_ALGORITHM , iterations, salt, b64_hash)
 
     def __repr__(self):
         return f"User: {self.username}, email={self.email}, is_verified: {self.is_verified}"
