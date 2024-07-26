@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: str
     SECRET_KEY: str
     ALGORITHM: str
+    PASSWORD_HASH_ALGORITHM: str
     
     class Config:
         env_flie = DOTENV
