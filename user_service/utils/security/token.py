@@ -1,3 +1,4 @@
+from fastapi import Response
 from user_service.config import settings
 from datetime import datetime, timedelta
 from typing import Any, Union
@@ -21,3 +22,6 @@ def decode_access_token(token: str) -> dict:
         raise ValueError("Token has expired")
     except jwt.InvalidTokenError:
         raise ValueError("Invalid token")
+
+def set_jwt_cookie(response: Response, cookie_name: str, encoded_jwt: str, expiration: datetime, secure = True):
+    response.set_cookie(key=cookie_name, value=encoded_jwt, httponly=True, expires=expiration.strftime("%a, %d %b %Y %H:%M:%S GMT"), secure=secure, samesite="lax")
