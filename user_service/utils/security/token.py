@@ -1,9 +1,10 @@
 from user_service.config import settings
 from datetime import datetime, timedelta
 from typing import Any, Union
-from jose import jwt, JWTError, ExpiredSignatureError 
+import jwt
 
-def create_access_token(subject: Union[str, Any], scopes: list = None, expires_delta: timedelta = None) -> str:
+
+def create_access_token(subject: Union[str, Any], scopes: list[str] = None, expires_delta: timedelta = None) -> str:
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expire = datetime.utcnow() + expires_delta
@@ -16,7 +17,7 @@ def decode_access_token(token: str) -> dict:
     try:
         decoded_jwt = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return decoded_jwt
-    except ExpiredSignatureError:
+    except jwt.ExpiredSignatureError:
         raise ValueError("Token has expired")
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise ValueError("Invalid token")
