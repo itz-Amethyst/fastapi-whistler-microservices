@@ -1,7 +1,5 @@
-from typing import Optional
-
+from typing import List, Optional
 from pydantic import ConfigDict, Field, SecretStr, field_validator
-
 from user_service.schemes.user import UserBase
 
 
@@ -21,6 +19,7 @@ class UserReponse(UserInDBBase):
     # tfa_enabled: bool
     # totp_secret: bool = Field(default= False, alias = "password")
     model_config = ConfigDict(populate_by_name=True)
+    scopes: List[str]
 
     class Config:
         # used for having multiple response type like single and plural (list)
