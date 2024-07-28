@@ -10,6 +10,6 @@ def date_time_sec():
 class BaseModel(Base):
     __abstract__ = True
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     created_time: Mapped[datetime] = mapped_column(DateTime, default=date_time_sec, nullable=False)
     modified: Mapped[datetime] = mapped_column(DateTime, default=date_time_sec, onupdate=date_time_sec, nullable=True)
