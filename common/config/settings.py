@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "WARNING"
     DEBUG: str = True
 
+    # imagine something like this lit print("")
+    EMAIL_TEMPLATES_DIR: str
+    SERVER_HOST: str
+    EMAIL_TEMPLATES_DIR: str
+    SMTP_PASSWORD: str
+    SMTP_USER: str
+
     class Config:
         env_file = DOTENV
 
