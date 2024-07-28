@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
-from common.utils.email import send_email
+from fastapi import APIRouter, Depends, HTTPException, Security, BackgroundTasks
+from common.utils.email import send_email_validation_email 
 from user_service.repository.user import UserRepository
 from user_service.schemes import UserCreate
 from sqlalchemy import Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from common.dep.db import DBSessionDepAsync
 from user_service.utils.security.auth import auth_dependency
-from user_service.schemes import UserReponse, TokenResponse
+from user_service.schemes import UserReponse, TokenResponse, EmailValidation
 from user_service.models.user import User
-from user_service.utils.security.hash import hash_password
 from common.config import settings
 
 router = APIRouter()
@@ -23,7 +22,7 @@ async def get_current_token(auth_data: Tuple[User, str] = Security(auth_dependen
 
 
 @router.post('/create', response_model=dict)
-async def create_user(user: UserCreate, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def create_user(user: UserCreate, tasks: BackgroundTasks, db: AsyncSession = Depends(DBSessionDepAsync)):
     user_repo = UserRepository(db)
     db_user = await user_repo.get_user_by_email(user.email)
     if db_user:
@@ -37,11 +36,8 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(DBSessionDepA
     await user_repo.create_user(new_user)
 
     token = create_access_token(subject=str(new_user.id), expires_delta=timedelta(hours=24))
-    await send_email(
-        email_to=user.email,
-        subject="Verify your email",
-        template_name="confirm_email.html",
-        environment={"link": f"{settings.SERVER_HOST}/user/verify-email?token={token}"}
-    )
+    # TODO token generation
+    email_validation_data = EmailValidation(email=user.email, subject="Verify Your Account", token,)
+    tasks.add_task(send_email_validation_email, email_validation_data)
     return new_user
     
