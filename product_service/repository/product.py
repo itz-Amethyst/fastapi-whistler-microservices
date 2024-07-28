@@ -5,7 +5,7 @@ from sqlalchemy import delete, update, insert, text
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from datetime import datetime
-from common.schemas.image import Image
+from common.schemes.image import Image
 from product_service.models.product import Product as ProductModel
 from product_service.schemas import Product 
 from common.repository.genericPicture import GenericPictureRepository

@@ -5,14 +5,14 @@ from common.dep.db import DBSessionDepAsync
 from contextmngr import SessionLocal
 from user_service.config import settings
 from user_service.repository.user import UserRepository
-from user_service.schemes import TokenResponse, UserCreate
+from user_service.schemes import TokenResponse,UserLogin 
 from user_service.utils.security.token import create_access_token, set_jwt_cookie 
 from user_service.utils.security.hash import verify_password
 
 router = APIRouter()
 
 @router.post("/token/oauth2", response_model=TokenResponse)
-async def login(user: UserCreate, response: Response, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def login(user: UserLogin, response: Response, db: AsyncSession = Depends(DBSessionDepAsync)):
     user_repo = UserRepository(db)
     expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expiration = datetime.utcnow() + expires_delta
