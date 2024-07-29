@@ -1,3 +1,4 @@
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Security, BackgroundTasks
 from common.utils.email import send_email_validation_email 
 from user_service.repository.user import UserRepository
@@ -5,6 +6,7 @@ from user_service.schemes import UserCreate
 from sqlalchemy import Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from common.dep.db import DBSessionDepAsync
+from user_service.utils.email import create_email_verification_token
 from user_service.utils.security.auth import auth_dependency
 from user_service.schemes import UserReponse, TokenResponse, EmailValidation
 from user_service.models.user import User
@@ -35,9 +37,21 @@ async def create_user(user: UserCreate, tasks: BackgroundTasks, db: AsyncSession
     )
     await user_repo.create_user(new_user)
 
-    token = create_access_token(subject=str(new_user.id), expires_delta=timedelta(hours=24))
-    # TODO token generation
-    email_validation_data = EmailValidation(email=user.email, subject="Verify Your Account", token,)
+    token = create_email_verification_token(user_id=str(new_user.id), expires_delta=timedelta(hours=12))
+    email_validation_data = EmailValidation(email=user.email, subject="Verify Your Account", token=token)
     tasks.add_task(send_email_validation_email, email_validation_data)
     return new_user
     
+@router.post('/resend-verification', response_model=dict)
+async def resend_verification(email: str, tasks: BackgroundTasks, db: AsyncSession = Depends(DBSessionDepAsync)):
+    user_repo = UserRepository(db)
+    user = await user_repo.get_user_by_email(email)
+    if user is None:
+        raise HTTPException(status_code=400, detail="Email not registered")
+    if user.email_verified:
+        return {"message": "Email is already verified"}
+
+    token = create_email_verification_token(user_id=str(user.id), expires_delta=timedelta(hours=12))
+    email_validation_data = EmailValidation(email=user.email, subject="Verify Your Account", token=token)
+    tasks.add_task(send_email_validation_email, email_validation_data)
+    return {"message": "Verification email has been resent. Please check your email."}
