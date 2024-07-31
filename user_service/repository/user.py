@@ -10,7 +10,7 @@ from common.dep.db import DBSessionDepAsync
 from product_service.models.product import Product as ProductModel
 from user_service.models.scope import Scope
 from user_service.models.user import User
-from user_service.schemes import UserReponse
+from user_service.schemes import UserResponse 
 from user_service.schemes.user import SuperUserCreate, UserCreate
 from user_service.utils.security.hash import hash_password
 class UserRepository:
@@ -20,14 +20,14 @@ class UserRepository:
 
     #! Todo create is_email_verified = false -> send email
     
-    async def get_user_by_id(self, user_id: str) -> Optional[UserReponse]:
+    async def get_user_by_id(self, user_id: str) -> Optional[UserResponse]:
         return self.session.get(User, user_id)
     
-    async def get_user_by_username(self, user_name: str)-> Optional[UserReponse]:
+    async def get_user_by_username(self, user_name: str)-> Optional[UserResponse]:
         result = await self.session.execute(select(User).filter_by(username= user_name))
         return result.scalars().first()
 
-    async def create_user(self, user_data: UserCreate) -> Optional[UserReponse]:
+    async def create_user(self, user_data: UserCreate) -> Optional[UserResponse]:
         hashed_password = await hash_password(user_data.password)
         new_user = User(
             username=user_data.username,
@@ -63,7 +63,7 @@ class UserRepository:
             
         return new_user
 
-    async def get_by_email(self, email: str) -> Optional[UserReponse]:
+    async def get_by_email(self, email: str) -> Optional[UserResponse]:
         result = await self.session.execute(select(User).filter_by(email=email))
         return result.scalars().first()
     

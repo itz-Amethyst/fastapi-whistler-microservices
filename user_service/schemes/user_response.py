@@ -1,15 +1,16 @@
 from typing import List, Optional
-from pydantic import ConfigDict, Field, SecretStr, field_validator
-from user_service.schemes.user import UserBase
+from pydantic import  Field, SecretStr, field_validator,BaseModel
+# from user_service.schemes.user import UserBa 
 
 
-class UserInDBBase(UserBase):
+# class UserInDBBase(UserBase):
+#     id: Optional[int] = None
+#     model_config = ConfigDict(from_attributes=True)
+
+
+
+class UserResponse(BaseModel):
     id: Optional[int] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
-
-class UserReponse(UserInDBBase):
     is_verified: bool 
     username: str
     email: str
@@ -18,9 +19,9 @@ class UserReponse(UserInDBBase):
     email_verified: bool
     # tfa_enabled: bool
     # totp_secret: bool = Field(default= False, alias = "password")
-    model_config = ConfigDict(populate_by_name=True)
     scopes: List[str]
 
     class Config:
         # used for having multiple response type like single and plural (list)
+        populate_by_name = True
         orm_mode = True

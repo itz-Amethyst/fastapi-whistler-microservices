@@ -6,7 +6,7 @@ from fastapi.security import SecurityScopes
 from sqlalchemy.ext.asyncio import AsyncSession
 from user_service.config import settings
 from common.utils.logger import logger_system
-from user_service.models import User
+from user_service.models.user import User
 from user_service.schemes import UserCreate, UserResponse, EmailValidation
 from user_service.repository.user import UserRepository
 from common.dep.db import DBSessionDep 
