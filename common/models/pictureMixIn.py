@@ -1,16 +1,29 @@
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.declarative import declared_attr 
 
 from common.models.contentType import ContentType
 
 class PictureMixin:
     # decide later to remove this fields or not
-    content_type_id = Column(Integer, ForeignKey("content_types.id"), nullable=True)
-    object_id = Column(Integer, nullable=True)
-    images = relationship("GenericPictures", 
-                          primaryjoin="and_(GenericPicture.content_type_id==foreign(PictureMixin.content_type_id), foreign(GenericPicture.object_id)==PictureMixin.object_id)",
-                          viewonly=True)
+    # Note: without declared's it's gonna throw and error due to abstract rule
+    @declared_attr
+    def content_type_id(cls):
+        return Column(Integer, ForeignKey("content_types.id"), nullable=True)
+    
+    @declared_attr
+    def object_id(cls):
+        return Column(Integer, nullable=True)
+
+    @declared_attr
+    def images(cls):
+        return relationship("GenericPicture",
+                            primaryjoin=(
+                                "and_(GenericPicture.content_type_id==foreign(PictureMixin.content_type_id), "
+                                "foreign(GenericPicture.object_id)==PictureMixin.object_id)"
+                            ),
+                            viewonly=True)
     
     
     @classmethod
