@@ -16,14 +16,15 @@ class Settings(BaseSettings):
     PASSWORD_HASH_ALGORITHM: str
     
     class Config:
-        env_flie = DOTENV
+        env_file = DOTENV
+        extra = 'ignore'
     
     @validator("VERIFICATION_METHOD", pre=True, always=True)
     def validate_verification_method(cls, value):
-        if value not in ("OPT", "Magic"):
+        if value not in ("OTP", "Magic"):
             return "OTP"
         return value
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    return Settings
+    return Settings()

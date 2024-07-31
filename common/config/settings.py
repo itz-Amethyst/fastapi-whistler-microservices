@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     SMTP_USER: str
 
     class Config:
+        extra = 'ignore'
         env_file = DOTENV
 
 @lru_cache(maxsize=128)
