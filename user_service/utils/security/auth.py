@@ -71,7 +71,7 @@ class AuthDependency(OAuth2PasswordBearer):
         else:
             authenticate_value = "Bearer"
 
-        token: str = self.token if self.token else await super().__call__(request)
+        token: Optional[str] = self.token if self.token else await super().__call__(request)
         exc = HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -79,6 +79,8 @@ class AuthDependency(OAuth2PasswordBearer):
         )
 
         if not token:
+            # if self.return_token:
+            #     return None, None
             raise exc
 
         try:
@@ -123,5 +125,5 @@ class AuthDependency(OAuth2PasswordBearer):
                 return None, None
             return None
         
-auth_dependency = AuthDependency()
-optional_auth_dependency = AuthDependency(token_required=False)
+# Not yet available
+# optional_auth_dependency = AuthDependency(token_required=False)
