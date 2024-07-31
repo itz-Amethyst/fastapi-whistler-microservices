@@ -7,19 +7,20 @@ from sqlalchemy import Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from common.dep.db import DBSessionDepAsync
 from user_service.utils.email import create_email_verification_token
-from user_service.utils.security.auth import auth_dependency
-from user_service.schemes import UserReponse, TokenResponse, EmailValidation
+from user_service.utils.security.auth import AuthDependency 
+from user_service.schemes import UserResponse, TokenResponse, EmailValidation
 from user_service.models.user import User
 from common.config import settings
 
 router = APIRouter()
 
-@router.get("/me", response_model=UserReponse)
-async def get_me(user: User = Security(auth_dependency)):
+@router.get("/me", response_model=UserResponse)
+async def get_me(user: User = Security(AuthDependency(session=DBSessionDepAsync))):
     return user
 
+# Todo anotation
 @router.get("/current", response_model=TokenResponse)
-async def get_current_token(auth_data: Tuple[User, str] = Security(auth_dependency(return_token=True))):
+async def get_current_token(auth_data = Security(AuthDependency(session=DBSessionDepAsync,return_token=True))):
     return auth_data[1]
 
 
