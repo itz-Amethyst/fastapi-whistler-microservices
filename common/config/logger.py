@@ -58,7 +58,7 @@ LOGGING_CONFIG: Dict[str, Any] = {
         "default": {
             "level": LOG_LEVEL,
             "class": "logging.StreamHandler",
-            "formatter": "json" if not settings.general.DEBUG else "colored",
+            "formatter": "json" if not settings.DEBUG else "colored",
         },
     },
     "loggers": {
@@ -84,8 +84,8 @@ LOGGING_CONFIG: Dict[str, Any] = {
     },
 }
 
-if settings.general.ENABLE_FILE_LOG_SYSTEM:
-    LOGGING_CONFIG["root"]["handlers"].append("file")
+# if settings.general.ENABLE_FILE_LOG_SYSTEM:
+#     LOGGING_CONFIG["root"]["handlers"].append("file")
 
 
 def configure_logging() -> None:
