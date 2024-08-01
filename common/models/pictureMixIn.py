@@ -28,14 +28,17 @@ class PictureMixin:
     
     @classmethod
     def setup(cls, session: Session):
-        model_name = cls.__tablename__
-        
-        
-        content_type = session.query(ContentType).filter_by(model = model_name).first()
-        if not content_type:
-            content_type = ContentType(model = model_name)
-            session.add(content_type)
-            session.commit()
+        if hasattr(cls, '__tablename__'):
+            model_name = cls.__tablename__
             
-        # to set the contenttype id for next usage
-        cls.content_type_id = content_type.id
+            
+            content_type = session.query(ContentType).filter_by(model = model_name).first()
+            if not content_type:
+                content_type = ContentType(model = model_name)
+                session.add(content_type)
+                session.commit()
+                
+            # to set the contenttype id for next usage
+            cls.content_type_id = content_type.id
+        else:
+            pass
