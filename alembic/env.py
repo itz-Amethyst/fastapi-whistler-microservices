@@ -5,13 +5,23 @@ from sqlalchemy import pool
 
 from alembic import context
 from common.config import settings
+from common.config.settings import Settings
 from common.models.pictureMixIn import PictureMixin
-from common.db.session import DBSessionManager, MetaData 
+from common.db.session import DBSessionManager, metadata 
+from common.db.session import Base
+
+#? Custom models
+from user_service import models
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 #! Custom
-config.set_main_option("sqlalchemy.url", settings.FULL_DATABASE_PG_URL)
+settings = Settings()
+local_connection = settings.FULL_DATABASE_PG_URL.replace("db", "localhost", 1)
+sync_database_url = local_connection.replace("postgresql+asyncpg", "postgresql")
+print(sync_database_url)
+config.set_main_option("sqlalchemy.url", sync_database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -23,7 +33,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 #? Custom
-target_metadata = MetaData
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -62,7 +72,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
         # custom
-        run_setup_on_migration()
+        run_setup_on_migration(context)
 
 
 def run_migrations_online() -> None:
@@ -88,7 +98,7 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
             # Custom
-            run_setup_on_migration()
+            run_setup_on_migration(context)
 
 
 if context.is_offline_mode():
