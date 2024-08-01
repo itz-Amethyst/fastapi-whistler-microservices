@@ -7,24 +7,27 @@ from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base, Sessi
 from common.config import settings
 # Database configuration
 
-db_password = settings.POSTGRES_PASSWORD
+db_password = settings.POSTGRES_PASSWORD.get_secret_value()
 db_user = settings.POSTGRES_USER
 db_name = settings.POSTGRES_DB
 
-DATABASE_URL = f"postgresql+asyncpg://{db_user}:{db_password}@db:5432/{db_name}"
+DATABASE_URL = f"postgresql+asyncpg://{db_user}:{db_password}@localhost:5431/{db_name}"
 DATABASE_ENGINE_ASYNC = create_async_engine(DATABASE_URL, echo=True, future=True)
 DATABASE_ENGINE = create_engine(DATABASE_URL.replace("postgresql+asyncpg", "postgresql"), echo=True, future=True)
 
-MetaData = MetaData()
+metadata = MetaData()
 
-session_factory_async = async_sessionmaker(autocommit=False, bind=DATABASE_ENGINE_ASYNC, expire_on_commit=False)
-session_factory = sessionmaker(autocommit=False, autoflush=False, bind=DATABASE_ENGINE_ASYNC)
+#! these session makers return a class instantiate have to invoke them then pass them to the actual manager
+session_factory_async_class = async_sessionmaker(autocommit=False, bind=DATABASE_ENGINE_ASYNC, expire_on_commit=False)
+session_factory_async = session_factory_async_class()
+session_factory_class = sessionmaker(autocommit=False, autoflush=False, bind=DATABASE_ENGINE)
+session_factory = session_factory_class()
 
 # not useful when using async senario instead handled manually
 # SessionLocal = scoped_session(session_factory)
 
 # Construct a base class for declarative class definitions
-Base = declarative_base()
+Base = declarative_base(metadata=metadata)
 
 # Supports both async and sync
 class DBSessionManager:
@@ -66,14 +69,14 @@ class DBSessionManager:
         if self._async_engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
         
-        session = self._async_sessionmaker()
+        session = self._async_sessionmaker
         try:
             yield session 
         except Exception:
             await session.rollback()
             raise
         finally:
-            session.close()
+            await session.close()
     @contextmanager
     def session_sync(self):
         if self._sync_sessionmaker is None:
