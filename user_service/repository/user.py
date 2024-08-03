@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 from fastapi import Depends, UploadFile
 from slugify import slugify
-from sqlalchemy import delete, update, insert, text
+from sqlalchemy import delete, or_, update, insert, text
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,8 +15,8 @@ from user_service.schemes.user import SuperUserCreate, UserCreate
 from user_service.utils.security.hash import hash_password
 class UserRepository:
     
-    def __init__(self, sess: Session) -> None:
-        self.session: Session = sess
+    def __init__(self, sess: AsyncSession) -> None:
+        self.session: AsyncSession = sess
 
     #! Todo create is_email_verified = false -> send email
     
@@ -33,16 +33,15 @@ class UserRepository:
             username=user_data.username,
             email=user_data.email,
             password_hash=hashed_password,
-            email_verified=user_data.email_verified,
-            is_active=user_data.is_active,
-            is_superuser=user_data.is_superuser
+            email_verified=False,
+            is_active=True,
+            is_superuser=False,
         )
-        async with self.session() as session:
-            async with session.begin():
-                session.add(new_user)
-                await session.commit()
-                await session.refresh(new_user)
-        return new_user
+        self.session.add(new_user)
+        await self.session.commit()
+        await self.session.flush()
+        await self.session.refresh(new_user)
+        return new_user.id
 
     async def create_super_user(self, user_data: SuperUserCreate) -> User:
         new_user = await self.create_user(user_data)
@@ -63,9 +62,20 @@ class UserRepository:
             
         return new_user
 
-    async def get_by_email(self, email: str) -> Optional[UserResponse]:
+    async def get_user_by_email(self, email: str) -> Optional[UserResponse]:
         result = await self.session.execute(select(User).filter_by(email=email))
-        return result.scalars().first()
+        return result.scalar_one_or_none()
+
+    async def get_user_by_email_or_username(self, email: str, username: str) -> Optional[UserResponse]:
+        result = await self.session.execute(
+            select(User).filter(
+                or_(
+                    User.email == email,
+                    User.username == username
+                )
+            )
+        )
+        return result.scalar_one_or_none()
     
 db: AsyncSession = Depends(DBSessionDepAsync)
 user_repository = UserRepository(db)
