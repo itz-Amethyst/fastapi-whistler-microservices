@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, validator
 
 
 class CreatedMixin(BaseModel):
-    created: Optional[datetime]
+    created: Optional[datetime] = None
 
     @validator("created", pre=True, always=True)
     def set_created(cls, v):
