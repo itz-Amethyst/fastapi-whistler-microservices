@@ -1,5 +1,5 @@
 from pydantic import EmailStr, StringConstraints, BaseModel
-from common.schemes.base import BaseModel
+# from common.schemes.base import BaseModel
 from typing import Annotated, Optional
 from datetime import datetime
 
@@ -14,9 +14,10 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    email_verified: Optional[bool] = False
-    is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
+    # email_verified: Optional[bool] = False
+    # is_active: Optional[bool] = True
+    # is_superuser: Optional[bool] = False
+
 
 class SuperUserCreate(UserCreate):
     is_superuser: bool = True

@@ -19,6 +19,9 @@ class User(BaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Define the relationship to Product
+    products = relationship("Product", back_populates="seller")
+
     scopes: Mapped[List["Scope"]] = relationship("Scope", secondary="user_scopes", back_populates="users")
 
     @validates("email")
