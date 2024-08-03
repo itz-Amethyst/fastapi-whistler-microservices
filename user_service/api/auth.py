@@ -12,7 +12,7 @@ from user_service.utils.security.hash import verify_password
 router = APIRouter()
 
 @router.post("/token/oauth2", response_model=TokenResponse)
-async def login(user: UserLogin, response: Response, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def login(user: UserLogin, response: Response, db: AsyncSession = DBSessionDepAsync):
     user_repo = UserRepository(db)
     expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expiration = datetime.utcnow() + expires_delta

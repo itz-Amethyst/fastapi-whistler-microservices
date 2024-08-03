@@ -1,9 +1,10 @@
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Integer, and_
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declared_attr 
 
 from common.models.contentType import ContentType
+from common.models.genericPictures import GenericPictures
 
 class PictureMixin:
     # decide later to remove this fields or not
@@ -18,12 +19,16 @@ class PictureMixin:
 
     @declared_attr
     def images(cls):
-        return relationship("GenericPicture",
-                            primaryjoin=(
-                                "and_(GenericPicture.content_type_id==foreign(PictureMixin.content_type_id), "
-                                "foreign(GenericPicture.object_id)==PictureMixin.object_id)"
-                            ),
-                            viewonly=True)
+         return relationship(
+            "GenericPictures",
+            primaryjoin=lambda: and_(
+                cls.content_type_id == GenericPictures.content_type_id,
+                cls.id == GenericPictures.object_id
+            ),
+            foreign_keys=[GenericPictures.content_type_id, GenericPictures.object_id],
+            viewonly=True
+        )
+
     
     
     @classmethod
