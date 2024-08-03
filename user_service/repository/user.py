@@ -3,7 +3,7 @@ from fastapi import Depends, UploadFile
 from slugify import slugify
 from sqlalchemy import delete, or_, update, insert, text
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 from common.dep.db import DBSessionDepAsync
@@ -24,8 +24,9 @@ class UserRepository:
         return self.session.get(User, user_id)
     
     async def get_user_by_username(self, user_name: str)-> Optional[UserResponse]:
-        result = await self.session.execute(select(User).filter_by(username= user_name))
-        return result.scalars().first()
+        result = await self.session.execute(
+            select(User).options(joinedload(User.scopes)).filter_by(username= user_name))
+        return result.unique().scalar_one_or_none()
 
     async def create_user(self, user_data: UserCreate) -> Optional[UserResponse]:
         hashed_password = await hash_password(user_data.password)
