@@ -1,5 +1,7 @@
 from datetime import timedelta
+from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, Security, BackgroundTasks
+from fastapi.responses import JSONResponse
 from common.utils.email import send_email_validation_email 
 from user_service.repository.user import UserRepository
 from user_service.schemes import UserCreate
@@ -24,27 +26,31 @@ async def get_current_token(auth_data = Security(AuthDependency(session=DBSessio
     return auth_data[1]
 
 
-@router.post('/create', response_model=dict)
-async def create_user(user: UserCreate, tasks: BackgroundTasks, db: AsyncSession = Depends(DBSessionDepAsync)):
+@router.post('/create', response_model=Dict[str, str])
+async def create_user(user: UserCreate, tasks: BackgroundTasks, db: AsyncSession = DBSessionDepAsync):
     user_repo = UserRepository(db)
-    db_user = await user_repo.get_user_by_email(user.email)
+    db_user = await user_repo.get_user_by_email_or_username(user.email, user.username)
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    new_user = User(
+        raise HTTPException(status_code=400, detail="seems you already have an account try log in")
+    new_user = UserCreate(
         username=user.username,
         email=user.email,
-        password_hash=user.password,
-        is_verified=False,
+        password=user.password,
     )
-    await user_repo.create_user(new_user)
+    new_user_id = await user_repo.create_user(new_user)
 
-    token = create_email_verification_token(user_id=str(new_user.id), expires_delta=timedelta(hours=12))
+    token = create_email_verification_token(user_id=str(new_user_id), expires_delta=timedelta(hours=12))
     email_validation_data = EmailValidation(email=user.email, subject="Verify Your Account", token=token)
     tasks.add_task(send_email_validation_email, email_validation_data)
-    return new_user
+    # Todo dict response 200, ok
+    response_data = {
+        "message": "User created successfully. Please check your email for verification.",
+        "email_sent_to": user.email,
+    }
+    return JSONResponse(content= response_data, status_code = 201) 
     
 @router.post('/resend-verification', response_model=dict)
-async def resend_verification(email: str, tasks: BackgroundTasks, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def resend_verification(email: str, tasks: BackgroundTasks, db: AsyncSession = DBSessionDepAsync):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
     if user is None:
