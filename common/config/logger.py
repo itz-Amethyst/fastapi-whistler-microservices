@@ -20,15 +20,16 @@ LOG_LEVEL = "DEBUG" if settings.DEBUG else str(settings.LOG_LEVEL)
 #     event_dict.pop("color_message", None)
 #     return event_dict
 
+
 # Processors that have nothing to do with output,
 # e.g. add timestamps or log level names.
 SHARED_PROCESSORS: Tuple[structlog.typing.Processor, ...] = (
-    structlog.contextvars.merge_contextvars,
+    # structlog.contextvars.merge_contextvars,
     structlog.stdlib.add_log_level,
     # Add extra attributes of LogRecord objects to the event dictionary
     # so that values passed in the extra parameter of log methods pass
     # through to log output.
-    structlog.stdlib.ExtraAdder(),
+    # structlog.stdlib.ExtraAdder(),
     # Add a timestamp in ISO 8601 format.
     structlog.processors.TimeStamper(fmt="iso", utc=True),
 )
@@ -67,16 +68,16 @@ LOGGING_CONFIG: Dict[str, Any] = {
             "level": "INFO",
             "propagate": True,
         },
-        "uvicorn.error": {
-            "handlers": ["default"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "uvicorn.access": {
-            "handlers": ["default"],
-            "level": "INFO",
-            "propagate": False,
-        },
+        # "uvicorn.error": {
+        #     "handlers": ["default"],
+        #     "level": "ERROR",
+        #     "propagate": False,
+        # },
+        # "uvicorn.access": {
+        #     "handlers": ["default"],
+        #     "level": "INFO",
+        #     "propagate": False,
+        # },
     },
     'root': {
         'handlers': ['default'],

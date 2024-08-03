@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncIterator, Union
+from typing import AsyncGenerator, AsyncIterator, Union
 from sqlalchemy import create_engine, text, MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncConnection
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base, Session
@@ -110,7 +110,7 @@ class DBSessionManager:
 
 sessionManager = DBSessionManager()
 
-async def get_db_session_async():
+async def get_db_session_async() -> AsyncGenerator[AsyncSession, None]:
     async with sessionManager.session_async() as session:
         yield session
 
