@@ -1,9 +1,12 @@
-from sqlalchemy import Float, String, Text, Boolean
+from sqlalchemy import Float, ForeignKey, Integer, String, Text, Boolean
 from common.models.base import BaseModel
 from common.models.pictureMixIn import PictureMixin
 from slugify import slugify 
 from user_service.models.user import User
 from sqlalchemy.orm import relationship, Mapped, mapped_column 
+from common.db.session import get_db_session_sync
+
+session = get_db_session_sync()
 
 class Product(BaseModel, PictureMixin):
     
@@ -13,6 +16,7 @@ class Product(BaseModel, PictureMixin):
     slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
+    seller_id = mapped_column(Integer, ForeignKey("users.id")) 
     seller = relationship("User", lazy="joined") 
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
@@ -20,6 +24,7 @@ class Product(BaseModel, PictureMixin):
         self.name = name
         self.slug = self.generate_slug(name)
         super().__init__(**kwargs)
+        self.setup(session)
         
     def generate_slug(self, name):
         return slugify(name)
