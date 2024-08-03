@@ -3,9 +3,9 @@ import hashlib
 import secrets
 from user_service.config import settings
 
-def hash_password(password, salt=None, iterations=600000):
+async def hash_password(password, salt=None, iterations=600000):
         if salt is None:
-            salt = secrets.token_hax(16)
+            salt = secrets.token_hex(16)
         assert salt and isinstance(salt, str) and "$" not in salt
         assert isinstance(password, str)
         pw_hash = hashlib.pbkdf2_hmac(
