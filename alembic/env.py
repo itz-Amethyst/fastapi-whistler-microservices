@@ -18,8 +18,8 @@ from user_service import models
 config = context.config
 #! Custom
 settings = Settings()
-local_connection = settings.FULL_DATABASE_PG_URL.replace("db", "localhost", 1)
-sync_database_url = local_connection.replace("postgresql+asyncpg", "postgresql")
+# local_connection = settings.FULL_DATABASE_PG_URL.replace("db", "localhost", 1)
+sync_database_url = settings.FULL_DATABASE_PG_URL.replace("postgresql+asyncpg", "postgresql")
 print(sync_database_url)
 config.set_main_option("sqlalchemy.url", sync_database_url)
 

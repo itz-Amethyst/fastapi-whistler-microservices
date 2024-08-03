@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session 
 from fastapi import Depends
 
-DBSessionDepAsync = Annotated[AsyncSession, Depends(get_db_session_async)]
-DBSessionDep = Annotated[Session, Depends(get_db_session_sync)]
+DBSessionDepAsync = Depends(get_db_session_async)
+DBSessionDep = Depends(get_db_session_sync)
 
 
 # usage
