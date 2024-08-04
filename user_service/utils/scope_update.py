@@ -28,14 +28,14 @@ def update_scopes(db: Session, service_dirs: List[str]):
                 logger_system.info(f"Added new scope for {service_dir}")
             except IntegrityError:
                 print(f"Scope already exists: {service_dir}")
-    if "full_permission" not in existing_scopes:
+    if "full_control" not in existing_scopes:
         try:
-            new_scope = Scope(name="full_permission", description="Full permission scope")
+            new_scope = Scope(name="full_control", description="Full permission scope")
             db.add(new_scope)
             db.commit()
-            logger_system.info("Added full_permission scope")
+            logger_system.info("Added full_control scope")
         except IntegrityError:
-            logger_system.warning("full_permission scope already exists") 
+            logger_system.warning("full_control scope already exists") 
 
 def check_and_update_scopes():
     db = get_db_session_sync()
