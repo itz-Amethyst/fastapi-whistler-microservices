@@ -1,9 +1,10 @@
+import asyncio
 import base64
 import hashlib
 import secrets
 from user_service.config import settings
 
-async def hash_password(password, salt=None, iterations=600000):
+def hash_password(password, salt=None, iterations=600000):
         if salt is None:
             salt = secrets.token_hex(16)
         assert salt and isinstance(salt, str) and "$" not in salt
@@ -14,7 +15,7 @@ async def hash_password(password, salt=None, iterations=600000):
         b64_hash = base64.b64encode(pw_hash).decode("ascii").strip()
         return "{}${}${}${}".format(settings.PASSWORD_HASH_ALGORITHM , iterations, salt, b64_hash)
 
-def verify_password(password, password_hash) -> bool:
+def verify_password_sync(password, password_hash) -> bool:
     if (password_hash or "").count("$") != 3:
         return False
     algorithm, iterations, salt, b64_hash = password_hash.split("$", 3)
@@ -22,3 +23,6 @@ def verify_password(password, password_hash) -> bool:
     assert algorithm == settings.PASSWORD_HASH_ALGORITHM
     compare_hash = hash_password(password, salt, iterations)
     return secrets.compare_digest(password_hash, compare_hash)
+
+async def verify_password(password, password_hash) -> bool:
+    return await asyncio.to_thread(verify_password_sync, password, password_hash)
