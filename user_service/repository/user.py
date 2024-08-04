@@ -18,49 +18,62 @@ class UserRepository:
     def __init__(self, sess: AsyncSession) -> None:
         self.session: AsyncSession = sess
 
-    #! Todo create is_email_verified = false -> send email
+    async def retrieve_all_users(self) -> Optional[UserResponse]:
+        result = await self.session.execute(
+            select(User).options(
+                joinedload(User.scopes),
+                joinedload(User.products)
+            )
+        )
+        return result.scalars().all()
     
-    async def get_user_by_id(self, user_id: str) -> Optional[UserResponse]:
-        return self.session.get(User, user_id)
+    async def get_user_by_id(self, user_id: int) -> Optional[UserResponse]:
+        result = await self.session.execute(
+            select(User).options(
+                joinedload(User.scopes),
+                joinedload(User.products)
+            ).filter(User.id == user_id)
+        )
+        return result.unique().scalar_one_or_none()
     
     async def get_user_by_username(self, user_name: str)-> Optional[UserResponse]:
         result = await self.session.execute(
-            select(User).options(joinedload(User.scopes)).filter_by(username= user_name))
+            select(User).options(joinedload(User.scopes), joinedload(User.products)).filter_by(username= user_name))
         return result.unique().scalar_one_or_none()
 
-    async def create_user(self, user_data: UserCreate) -> Optional[UserResponse]:
-        hashed_password = await hash_password(user_data.password)
+    async def create_user(self, user_data: UserCreate, email_verified: bool = False, is_superuser: int = False) -> Optional[UserResponse]:
+        hashed_password = hash_password(user_data.password)
         new_user = User(
             username=user_data.username,
             email=user_data.email,
             password_hash=hashed_password,
-            email_verified=False,
+            email_verified=email_verified,
             is_active=True,
-            is_superuser=False,
+            is_superuser=is_superuser,
         )
         self.session.add(new_user)
         await self.session.commit()
         await self.session.flush()
         await self.session.refresh(new_user)
-        return new_user.id
+        return new_user
 
     async def create_super_user(self, user_data: SuperUserCreate) -> User:
-        new_user = await self.create_user(user_data)
+        new_user = await self.create_user(user_data, True, True)
         
         # Add full_permission scope
-        async with self.session() as session:
-            scope = await session.execute(select(Scope).where(Scope.name == 'full_permission'))
-            full_permission_scope = scope.scalar()
-            if not full_permission_scope:
-                full_permission_scope = Scope(name='full_permission')
-                session.add(full_permission_scope)
-                await session.commit()
-                await session.refresh(full_permission_scope)
-            
-            new_user.scopes.append(full_permission_scope)
-            await session.commit()
-            await session.refresh(new_user)
-            
+        
+        scope = await self.session.execute(select(Scope).where(Scope.name == 'full_permission'))
+        full_permission_scope = scope.scalar()
+        if not full_permission_scope:
+            full_permission_scope = Scope(name='full_permission')
+            self.session.add(full_permission_scope)
+            await self.session.commit()
+            await self.session.refresh(full_permission_scope)
+        
+        new_user.scopes.append(full_permission_scope)
+        await self.session.commit()
+        await self.session.refresh(new_user)
+        
         return new_user
 
     async def get_user_by_email(self, email: str) -> Optional[UserResponse]:
@@ -77,6 +90,12 @@ class UserRepository:
             )
         )
         return result.scalar_one_or_none()
+    
+    async def update_user_verification(self, user_id: int) -> None:
+        await self.session.execute(
+            update(User).where(User.id == user_id).values(email_verified=True)
+        )
+        await self.session.commit()
     
 db: AsyncSession = Depends(DBSessionDepAsync)
 user_repository = UserRepository(db)
