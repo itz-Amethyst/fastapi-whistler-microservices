@@ -18,14 +18,14 @@ class UserRepository:
     def __init__(self, sess: AsyncSession) -> None:
         self.session: AsyncSession = sess
 
-    async def retrieve_all_users(self) -> Optional[UserResponse]:
+    async def retrieve_all_users(self) -> Optional[List[UserResponse]]:
         result = await self.session.execute(
             select(User).options(
                 joinedload(User.scopes),
                 joinedload(User.products)
             )
         )
-        return result.scalars().all()
+        return result.unique().scalars().all()
     
     async def get_user_by_id(self, user_id: int) -> Optional[UserResponse]:
         result = await self.session.execute(
