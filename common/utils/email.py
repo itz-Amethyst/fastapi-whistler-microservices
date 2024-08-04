@@ -85,7 +85,7 @@ async def send_email(
 
 async def send_email_validation_email(data: EmailValidation) -> None:
     subject = f"{PROJECT_NAME} - {data.subject}"
-    link = f"{SERVER_HOST}?token={data.token.get_secret_value()}"
+    link = f"{SERVER_HOST}/users/verify?token={data.token.get_secret_value()}"
     template_name = "confirm_email.html"
     await send_email(
         email_to=data.email,
