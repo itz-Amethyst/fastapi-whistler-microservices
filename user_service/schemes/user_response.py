@@ -1,4 +1,5 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Any, List, Optional, Union
 from pydantic import  Field, SecretStr, field_validator,BaseModel
 # from user_service.schemes.user import UserBa 
 
@@ -11,16 +12,17 @@ from pydantic import  Field, SecretStr, field_validator,BaseModel
 
 class UserResponse(BaseModel):
     id: Optional[int] = None
-    is_verified: bool 
     username: str
     email: str
     is_superuser: bool
     is_active: bool
     email_verified: bool
+    created_time: datetime
     # tfa_enabled: bool
     # totp_secret: bool = Field(default= False, alias = "password")
-    scopes: List[str]
-
+    scopes: Optional[List[str]] = []
+    products: Optional[List]
+    
     class Config:
         # used for having multiple response type like single and plural (list)
         populate_by_name = True
