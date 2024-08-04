@@ -1,10 +1,11 @@
 import secrets
-from typing import Optional
-from fastapi import HTTPException
+from typing import Callable, Optional
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from passlib.context import CryptContext
 from starlette.requests import Request
 from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
+from common.db.session import get_db_session_async
 from user_service.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +26,7 @@ def generate_two_factor_recovery_code():
     
 # Note the scopes are static here find a better way to make them dynamic
 oauth_kwargs = {
-    "tokenUrl": "/token/oauth2",
+    "tokenUrl": "/users/oauth2",
     "scopes": {
         "discount_management": "Create, list or edit discounts",
         "product_management": "Create, list or edit products",
@@ -46,13 +47,13 @@ def check_selective_scopes(request, scope, token):
         return False
     return f"{scope}:{model_id}" in token.permissions
 
-
+db = get_db_session_async()
 class AuthDependency(OAuth2PasswordBearer):
-    def __init__(self, session: AsyncSession, enabled: bool = True, token_required: bool = True, token: Optional[str] = None, return_token=False):
+    def __init__(self, db_dependency: Callable = Depends(get_db_session_async), enabled: bool = True, token_required: bool = True, token: Optional[str] = None, return_token=False):
         self.enabled = enabled
         self.return_token = return_token
         self.token = token
-        self.session = session
+        self.db_dependency = db_dependency 
         super().__init__(
             **oauth_kwargs,
             auto_error=token_required,
@@ -60,7 +61,7 @@ class AuthDependency(OAuth2PasswordBearer):
             description=bearer_description if token_required else optional_bearer_description,
         )
 
-    async def _process_request(self, request: Request, security_scopes: SecurityScopes):
+    async def _process_request(self, request: Request, security_scopes: SecurityScopes, db: AsyncSession):
         if not self.enabled:
             if self.return_token:
                 return None, None
@@ -91,10 +92,10 @@ class AuthDependency(OAuth2PasswordBearer):
         user_id = decoded_token.get("sub")
         scopes = decoded_token.get("scopes", [])
 
-        user_repo = UserRepository(self.session)
-        user = await user_repo.get_user_by_id(user_id)
+        user_repo = UserRepository(db)
+        user = await user_repo.get_user_by_id(int(user_id))
 
-        if not user or not user.is_enabled:
+        if not user or not user.is_active:
             raise HTTPException(status_code=403, detail="Account is disabled")
 
         forbidden_exception = HTTPException(
@@ -115,9 +116,9 @@ class AuthDependency(OAuth2PasswordBearer):
 
         return user
 
-    async def __call__(self, request: Request, security_scopes: SecurityScopes):
+    async def __call__(self, request: Request, security_scopes: SecurityScopes, db: AsyncSession = Depends(get_db_session_async)):
         try:
-            return await self._process_request(request, security_scopes)
+            return await self._process_request(request, security_scopes, db)
         except HTTPException:
             if self.auto_error:
                 raise
