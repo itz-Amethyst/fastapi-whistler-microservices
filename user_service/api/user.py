@@ -32,14 +32,13 @@ async def get_all_users(
         AuthDependency(token_required=True, return_token=False), scopes=["full_control"]
     ),
     db: AsyncSession = DBSessionDepAsync):
-    user, token = auth_data
     
-    if not user:
+    if not auth_data:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     
     user_repo = UserRepository(db)
     result = await user_repo.retrieve_all_users()
-    return result
+    return [UserResponse.from_orm(user) for user in result]
 
 
 @router.post('/create', response_model=Dict[str, str])
