@@ -26,6 +26,7 @@ tenacity = "^8.5.0"
 pyjwt = "^2.8.0"
 emails = "^0.6"
 aiosmtplib = "^3.0.1"
+apscheduler = "^3.10.4"
 
 
 [tool.poetry.group.dev.dependencies]
