@@ -22,7 +22,7 @@ async def init_db(db: Database) -> None:
     logger_system.warning("Creating initial data")
     user = await user_repository.get_user_by_username(user_name=settings.FIRST_SUPERUSER_NAME)
     if not user:
-        hashed_password = hash_password(settings.FIRST_SUPERUSER_PASSWORD)
+        hashed_password = await hash_password(settings.FIRST_SUPERUSER_PASSWORD)
         # Create user auth
         user_data = UserCreate(
             email=FIRST_SUPERUSER,
