@@ -9,14 +9,14 @@ router = APIRouter()
 
 
 @router.get("/orders", response_model=List[Order])
-async def get_all_orders(skip:int = 0, limit:int = 10, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_all_orders(skip:int = 0, limit:int = 10, db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
     orders = await repo.get_all_orders(skip=skip, limit=limit)
     return orders 
 
 # Todo: later add security retrive id dependency
 @router.post("/orders", response_model=Order)
-async def create_product(req: Request, order: OrderCreate, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def create_product(req: Request, order: OrderCreate, db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
     created_order = await repo.create_order(order) 
     if not created_order:
@@ -25,7 +25,7 @@ async def create_product(req: Request, order: OrderCreate, db: AsyncSession = De
     return created_order 
 
 @router.put("/order/{order_id}", response_model=Order)
-async def update_order(order_id: int, order: OrderUpdate, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def update_order(order_id: int, order: OrderUpdate, db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
     updated_order = repo.update_order(order_id, order)
         
@@ -35,7 +35,7 @@ async def update_order(order_id: int, order: OrderUpdate, db: AsyncSession = Dep
     return updated_order
 
 @router.get("/orders/{order_id}", response_model=Order)
-async def get_order_by_id(order_id :int, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_order_by_id(order_id :int, db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
     order = await repo.get_order_by_id(order_id)
     if not order:
@@ -43,7 +43,7 @@ async def get_order_by_id(order_id :int, db: AsyncSession = Depends(DBSessionDep
     return order 
 
 @router.get("/orders/{reference_id}", response_model=Order)
-async def get_order_by_reference_id(reference_id : str, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_order_by_reference_id(reference_id : str, db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
     order = await repo.get_order_by_reference_id(reference_id)
     if not order:

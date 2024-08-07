@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     PGADMIN_DEFAULT_PASSWORD: str
     LOG_LEVEL: str = "WARNING"
     DEBUG: str = True
-    BACKEND_CORS_ORIGINS: List[str]
+    BACKEND_CORS_ORIGINS: str | List[str]
 
     # imagine something like this lit print("")
     EMAIL_TEMPLATES_DIR: str
