@@ -22,6 +22,7 @@ class User(BaseModel):
     # Define the relationship to Product
     products = relationship("Product", back_populates="seller")
 
+    orders = relationship("Order", back_populates="user")
     scopes: Mapped[List["Scope"]] = relationship("Scope", secondary="user_scopes", back_populates="users")
 
     @validates("email")
