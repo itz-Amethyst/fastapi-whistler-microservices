@@ -11,14 +11,14 @@ router = APIRouter()
 
 
 @router.get("/products", response_model=List[Product])
-async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     products = await repo.get_all_products(skip=skip, limit=limit)
     return products
 
 # Todo: later add security retrive id dependency
 @router.post("/products", response_model=Product)
-async def create_product(req: Request, product: ProductCreate, picture: UploadFile = None, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def create_product(req: Request, product: ProductCreate, picture: UploadFile = None, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     product_result, success = await repo.insert_product(product.model_dump(), picture)
     if not success and not product_result:
@@ -27,7 +27,7 @@ async def create_product(req: Request, product: ProductCreate, picture: UploadFi
     return product_result
 
 @router.get("/products/{product_id}", response_model=Product)
-async def get_product_by_id(product_id :int, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_product_by_id(product_id :int, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     product = await repo.get_product_by_id(product_id)
     if not product:
@@ -35,7 +35,7 @@ async def get_product_by_id(product_id :int, db: AsyncSession = Depends(DBSessio
     return product
 
 @router.get("/products/{product_slug}", response_model=Product)
-async def get_product_by_slug(product_slug : str, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_product_by_slug(product_slug : str, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     product = await repo.get_product_by_slug(product_slug)
     if not product:
@@ -44,13 +44,13 @@ async def get_product_by_slug(product_slug : str, db: AsyncSession = Depends(DBS
 
 
 @router.get("/products/", response_model=List[Product])
-async def get_all_products_with_picture(db: AsyncSession = Depends(DBSessionDepAsync)):
+async def get_all_products_with_picture(db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     products = await repo.get_all_products_with_pictures()
     return products
 
 @router.delete("/products/{product_id}", response_model=bool)
-async def delete_product(product_id: int, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def delete_product(product_id: int, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     success = await repo.delete_product(product_id)
     if not success:
@@ -59,7 +59,7 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(DBSessionDe
 
 
 @router.put("/products/{product_id}", response_model=Product)
-async def update_product(product_id: int, details: ProductUpdate, picture: UploadFile = None, db: AsyncSession = Depends(DBSessionDepAsync)):
+async def update_product(product_id: int, details: ProductUpdate, picture: UploadFile = None, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     try:
         updated_product = await repo.update_product(product_id, details, picture)

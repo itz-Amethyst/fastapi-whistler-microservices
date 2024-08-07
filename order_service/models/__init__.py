@@ -1,2 +1,3 @@
+from common.db.session import Base
 from .order import Order
-from .orderItems import OrderItem
+from .orderItem import OrderItem

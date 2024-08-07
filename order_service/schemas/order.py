@@ -1,9 +1,9 @@
 from typing import List
 import uuid
-from common.models.base import BaseModel
+from common.schemes.base import BaseModel
 from pydantic import UUID4 
 from order_service.models.order import OrderStatus
-from order_service.schemas import OrderItemCreate, OrderItem , OrderItemUpdate
+from order_service.schemas.orderItem import OrderItem, OrderItemCreate, OrderItemUpdate 
 
 class OrderBase(BaseModel):
     reference_id : UUID4 

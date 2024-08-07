@@ -17,8 +17,11 @@ class Product(BaseModel, PictureMixin):
     description: Mapped[str] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
     seller_id = mapped_column(Integer, ForeignKey("users.id")) 
-    seller = relationship("User", lazy="joined") 
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    
+    seller = relationship("User", back_populates="products")
+    order_items = relationship("OrderItem", back_populates="product")
 
     def __init__(self, name , **kwargs):
         self.name = name
