@@ -12,6 +12,7 @@ from common.db.session import Base
 
 #? Custom models
 from user_service import models
+from order_service import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

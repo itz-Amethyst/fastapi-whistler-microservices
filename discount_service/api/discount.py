@@ -1,15 +1,18 @@
-from typing import List
-from fastapi import APIRouter, HTTPException
+from typing import List, Optional, Tuple, Union
+from fastapi import APIRouter, HTTPException, Security
 from discount_service.repository.discount import DiscountRepository
 from discount_service.models import Discount as DiscountModel
 from discount_service.schemas import CreateDiscount, UpdateDiscount, Discount
+from user_service.models.user import User
+from user_service.utils.security.auth import AuthDependency
 
 
 router = APIRouter()
 repository = DiscountRepository()
 
 @router.post("/discounts/", response_model=dict)
-async def create_discount(discount: CreateDiscount):
+async def create_discount(discount: CreateDiscount, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+        AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
     discount = DiscountModel(**discount.model_dump())
     print(discount)
     result = await repository.create(discount)
