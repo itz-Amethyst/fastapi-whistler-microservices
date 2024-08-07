@@ -7,14 +7,14 @@ from common.config.logger import configure_logging
 from common.setup.helper.lifespan import lifespan
 
 from common.config import settings
-from app.messages.code.main import responses
-from app.schemas.error.main import CommonHTTPError , APIValidationError
-from app.setup.helper.custom_exception import setup_custom_exceptions
+# from app.messages.code.main import responses
+# from app.schemas.error.main import CommonHTTPError , APIValidationError
+# from app.setup.helper.custom_exception import setup_custom_exceptions
 
-from common.setup.helper.middleware import setup_cors_middleware
+from common.setup.helper.middleware import setup_middlewares 
 from common.setup.helper.route import setup_routers
-from app.setup.helper.static import serve_static_app
-from app.setup.helper.init_db import init_db
+# from app.setup.helper.static import serve_static_app
+# from app.setup.helper.init_db import init_db
 
 
 tags_metadata = [
@@ -72,7 +72,7 @@ def create_app():
         lifespan = lifespan
     )
     setup_routers(app)
-    setup_cors_middleware(app)
+    setup_middlewares(app)
     # serve_static_app(app)
     # Todo
     # setup_custom_exceptions(app)
