@@ -1,4 +1,3 @@
-from pymongo.database import Database
 from user_service.repository.user import user_repository
 from user_service.schemes import UserCreate 
 from common.utils.logger import logger_system
@@ -16,9 +15,7 @@ wait_seconds = 1
     stop=stop_after_attempt(max_tries),
     wait=wait_fixed(wait_seconds),
 )
-async def init_db(db: Database) -> None:
-    # Todo
-    print("inside")
+async def init_db() -> None:
     logger_system.warning("Creating initial data")
     user = await user_repository.get_user_by_username(user_name=settings.FIRST_SUPERUSER_NAME)
     if not user:
@@ -27,8 +24,6 @@ async def init_db(db: Database) -> None:
         user_data = UserCreate(
             email=FIRST_SUPERUSER,
             password=hashed_password,
-            is_superuser=True,
-            email_verified=True,
             username=FIRST_SUPERUSER,
         )
         user = await user_repository.create_super_user(user_data) 

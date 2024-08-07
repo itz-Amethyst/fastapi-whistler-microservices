@@ -95,5 +95,5 @@ class UserRepository:
         )
         await self.session.commit()
     
-db: AsyncSession = Depends(DBSessionDepAsync)
+db: AsyncSession = DBSessionDepAsync
 user_repository = UserRepository(db)
