@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from common.dep.db import DBSessionDepAsync
@@ -24,7 +24,7 @@ async def determine_scopes(existing_user, db: AsyncSession) -> list:
     else:
         return []
 
-async def authenticate_user(username: str, password: str, db: AsyncSession):
+async def authenticate_user(username: str, password: str, db: AsyncSession, request: Request):
     user_repo = UserRepository(db)
     expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expiration = datetime.utcnow() + expires_delta
@@ -45,13 +45,13 @@ async def authenticate_user(username: str, password: str, db: AsyncSession):
 
     scope = await determine_scopes(existing_user, db)
 
-    token = create_access_token(subject=existing_user.id, scopes=scope, expires_delta=expires_delta)
+    token = create_access_token(subject=existing_user.id, scopes=scope, expires_delta=expires_delta, request = request)
     
     return token, expiration, existing_user
 
 @router.post("/login", response_model=TokenResponse)
-async def login_json(user: UserLogin, response: Response, db: AsyncSession = DBSessionDepAsync):
-    token, expiration, user = await authenticate_user(user.username, user.password, db)
+async def login_json(request: Request, user: UserLogin, response: Response, db: AsyncSession = DBSessionDepAsync):
+    token, expiration, user = await authenticate_user(user.username, user.password, db, request)
     set_jwt_cookie(response, "jwt_token", token, expiration)
     return TokenResponse(access_token=token, token_type="bearer")
 
