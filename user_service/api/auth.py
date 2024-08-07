@@ -18,9 +18,9 @@ async def determine_scopes(existing_user, db: AsyncSession) -> list:
         scope_repo = ScopeRepository(sess=db)
         # Adds the scope to user if hadn't been applied
         await scope_repo.add_scope_to_user(existing_user.id, "full_control")
-        return ['full_control']
+        return [scope.name for scope in existing_user.scopes]
     elif existing_user.scopes:
-        return [scope.title for scope in existing_user.scopes]
+        return [scope.name for scope in existing_user.scopes]
     else:
         return []
 

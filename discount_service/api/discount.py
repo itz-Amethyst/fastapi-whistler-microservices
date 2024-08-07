@@ -13,6 +13,10 @@ repository = DiscountRepository()
 @router.post("/discounts/", response_model=dict)
 async def create_discount(discount: CreateDiscount, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
         AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
+
+    if not auth_data:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
     discount = DiscountModel(**discount.model_dump())
     print(discount)
     result = await repository.create(discount)
@@ -29,7 +33,11 @@ async def read_discount(discount_id: str):
     return discount
 
 @router.put("/discounts/{discount_id}", response_model=Discount)
-async def update_discount(discount_id: str, update_data: UpdateDiscount):
+async def update_discount(discount_id: str, update_data: UpdateDiscount, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+        AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
+
+    if not auth_data:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     update_dict = update_data.model_dump(exclude_unset=True)
     discount = await repository.update(discount_id, update_dict)
     if not discount:
@@ -37,12 +45,22 @@ async def update_discount(discount_id: str, update_data: UpdateDiscount):
     return discount
 
 @router.delete("/discounts/{discount_id}", response_model=dict)
-async def delete_discount(discount_id: str):
+async def delete_discount(discount_id: str, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+        AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
+
+    if not auth_data:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
     success = await repository.delete(discount_id)
     if not success:
         raise HTTPException(status_code=404, detail="Discount not found")
     return {"detail": "Discount deleted"}
 
 @router.get("/discounts/", response_model=List[Discount])
-async def list_discounts(limit: int = 100, skip: int = 0):
+async def list_discounts(limit: int = 100, skip: int = 0, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+        AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
+
+    if not auth_data:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
     return await repository.list(limit, skip)
