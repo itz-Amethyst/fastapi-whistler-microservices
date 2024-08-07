@@ -19,7 +19,7 @@ db: AsyncSession = get_db_session_async()
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: User = Security(AuthDependency())):
-    return user
+    return UserResponse.from_orm(user)
 
 # Todo anotation
 @router.get("/current", response_model=TokenResponse)

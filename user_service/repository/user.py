@@ -17,28 +17,26 @@ class UserRepository:
     
     def __init__(self, sess: AsyncSession) -> None:
         self.session: AsyncSession = sess
+    
+    def prepare_query(self):
+        return select(User).options(
+            joinedload(User.scopes),
+            joinedload(User.products)
+        )
 
     async def retrieve_all_users(self) -> Optional[List[UserResponse]]:
-        result = await self.session.execute(
-            select(User).options(
-                joinedload(User.scopes),
-                joinedload(User.products)
-            )
-        )
+        query = self.prepare_query
+        result = await self.session.execute(query)
         return result.unique().scalars().all()
     
     async def get_user_by_id(self, user_id: int) -> Optional[UserResponse]:
-        result = await self.session.execute(
-            select(User).options(
-                joinedload(User.scopes),
-                joinedload(User.products)
-            ).filter(User.id == user_id)
-        )
+        query = self.prepare_query()
+        result = await self.session.execute(query.filter(User.id == user_id))
         return result.unique().scalar_one_or_none()
     
     async def get_user_by_username(self, user_name: str)-> Optional[UserResponse]:
-        result = await self.session.execute(
-            select(User).options(joinedload(User.scopes), joinedload(User.products)).filter_by(username= user_name))
+        query = self.prepare_query()
+        result = await self.session.execute(query.filter(User.username == user_name))
         return result.unique().scalar_one_or_none()
 
     async def create_user(self, user_data: UserCreate, email_verified: bool = False, is_superuser: int = False) -> Optional[UserResponse]:
