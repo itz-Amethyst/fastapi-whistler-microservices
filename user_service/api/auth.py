@@ -56,8 +56,8 @@ async def login_json(request: Request, user: UserLogin, response: Response, db: 
     return TokenResponse(access_token=token, token_type="bearer")
 
 @router.post("/oauth2", response_model=TokenResponse)
-async def login_oauth( response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = DBSessionDepAsync):
-    token, expiration, user = await authenticate_user(form_data.username, form_data.password, db)
+async def login_oauth(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = DBSessionDepAsync):
+    token, expiration, user = await authenticate_user(form_data.username, form_data.password, db, request)
     set_jwt_cookie(response, "jwt_token", token, expiration)
     return TokenResponse(access_token=token, token_type="bearer")
 
