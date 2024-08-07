@@ -85,7 +85,7 @@ class AuthDependency(OAuth2PasswordBearer):
             raise exc
 
         try:
-            decoded_token = decode_access_token(token)
+            decoded_token = decode_access_token(token, request)
         except ValueError:
             raise exc
 
