@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: SecretStr 
     POSTGRES_DB: str 
     FULL_DATABASE_PG_URL: str 
+    FULL_DATABASE_PG_URL_DOCKER_COMPOSE: str 
     FULL_MONGODB_URL: str
     PGADMIN_DEFAULT_EMAIL: str
     PGADMIN_DEFAULT_PASSWORD: str
