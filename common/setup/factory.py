@@ -1,5 +1,5 @@
 from http import HTTPStatus
-
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from starlette import status
@@ -42,7 +42,6 @@ tags_metadata = [
 
 def create_app():
     configure_logging()
-    # init_db()
     description = f"Whistler Apis"
     app = FastAPI(
         title="Whistler",
@@ -71,6 +70,8 @@ def create_app():
         # Todo Ping atlas mongo db
         lifespan = lifespan
     )
+    # /metrics
+    Instrumentator().instrument(app).expose(app)
     setup_routers(app)
     setup_middlewares(app)
     # serve_static_app(app)

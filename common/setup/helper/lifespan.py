@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from common.db.session import sessionManager
 from common.utils.logger import logger_system
 from common.db.session import Base
+from user_service.setup.init_db import init_db
 
 
 
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=conn.get_bind())
         conn.commit()
     
+    await init_db()
     yield
 
     logger_system.info("Shutting down the system.")
