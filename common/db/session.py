@@ -11,7 +11,7 @@ db_password = settings.POSTGRES_PASSWORD.get_secret_value()
 db_user = settings.POSTGRES_USER
 db_name = settings.POSTGRES_DB
 
-DATABASE_URL = f"postgresql+asyncpg://{db_user}:{db_password}@localhost:5431/{db_name}"
+DATABASE_URL = settings.FULL_DATABASE_PG_URL
 DATABASE_ENGINE_ASYNC = create_async_engine(DATABASE_URL, echo=True, future=True)
 DATABASE_ENGINE = create_engine(DATABASE_URL.replace("postgresql+asyncpg", "postgresql"), echo=True, future=True)
 
