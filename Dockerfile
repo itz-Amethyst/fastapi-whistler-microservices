@@ -19,9 +19,10 @@ RUN poetry config virtualenvs.create false && poetry install --no-interaction --
 # Copy the rest of the application code
 COPY . .
 
+RUN chmod +x /code/scripts/run-migration.sh
+
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-
 # Run Alembic migrations and then Uvicorn
-CMD ["sh", "-c", "alembic revision --autogenerate -m "init" && alembic upgrade head && uvicorn user_service.main:app --reload --host 0.0.0.0 --port 8000"]
+CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
