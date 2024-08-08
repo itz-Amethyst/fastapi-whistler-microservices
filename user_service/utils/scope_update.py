@@ -28,7 +28,7 @@ def update_scopes(db: Session, service_dirs: List[str]):
                 logger_system.info(f"Added new scope for {service_dir}")
             except IntegrityError:
                 print(f"Scope already exists: {service_dir}")
-    if "full_control" not in existing_scopes:
+    if "full_control" not in existing_scopes_names:
         try:
             new_scope = Scope(name="full_control", description="Full permission scope")
             db.add(new_scope)
