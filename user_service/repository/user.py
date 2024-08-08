@@ -53,7 +53,7 @@ class UserRepository:
         await self.session.commit()
         await self.session.flush()
         query = self.prepare_query()
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.filter(User.username == new_user.username))
         new_user = result.unique().scalars().one_or_none()
         return new_user
 
@@ -79,8 +79,9 @@ class UserRepository:
         return new_user
 
     async def get_user_by_email(self, email: str) -> Optional[UserResponse]:
-        result = await self.session.execute(select(User).filter_by(email=email))
-        return result.scalar_one_or_none()
+        query = self.prepare_query()
+        result = await self.session.execute(query.filter(User.email == email))
+        return result.unique().scalar_one_or_none()
 
     async def get_user_by_email_or_username(self, email: str, username: str) -> Optional[UserResponse]:
         result = await self.session.execute(
