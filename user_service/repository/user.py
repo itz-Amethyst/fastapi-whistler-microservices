@@ -52,7 +52,9 @@ class UserRepository:
         self.session.add(new_user)
         await self.session.commit()
         await self.session.flush()
-        await self.session.refresh(new_user)
+        query = self.prepare_query()
+        result = await self.session.execute(query)
+        new_user = result.unique().scalars().one_or_none()
         return new_user
 
     async def create_super_user(self, user_data: SuperUserCreate) -> User:
@@ -60,15 +62,17 @@ class UserRepository:
         
         # Add full_permission scope
         
-        scope = await self.session.execute(select(Scope).where(Scope.name == 'full_permission'))
-        full_permission_scope = scope.scalar()
+        scope = await self.session.execute(select(Scope).where(Scope.name == 'full_control'))
+        full_permission_scope = scope.scalar_one_or_none()
         if not full_permission_scope:
-            full_permission_scope = Scope(name='full_permission')
+            full_permission_scope = Scope(name='full_control', description="full_control permission")
             self.session.add(full_permission_scope)
             await self.session.commit()
             await self.session.refresh(full_permission_scope)
         
-        new_user.scopes.append(full_permission_scope)
+        if full_permission_scope not in new_user.scopes:
+            new_user.scopes.append(full_permission_scope)
+        
         await self.session.commit()
         await self.session.refresh(new_user)
         
