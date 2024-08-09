@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/products", response_model=List[Product])
 async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
-    products = await repo.get_all_products_with_pictures()
+    products = await repo.get_all_products_with_pictures(skip, limit)
     return products
 
 # Todo: later add security retrive id dependency
@@ -30,17 +30,23 @@ async def create_product(req: Request, product: ProductCreate = Depends(), pictu
 @router.get("/products/{product_id}", response_model=Product)
 async def get_product_by_id(product_id :int, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
-    product = await repo.get_product_by_id(product_id)
+    product = await repo.get_product_with_pictures(product_id)
     if not product:
         raise HTTPException(status=404, detail=f"Product with id {product_id} not found")
     return product
 
+# Todo 
 @router.get("/products/{product_slug}", response_model=Product)
 async def get_product_by_slug(product_slug : str, db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
-    product = await repo.get_product_by_slug(product_slug)
+    product_id = await repo.get_product_by_slug(product_slug)
+    if not product_id:
+        raise HTTPException(status_code=404, detail=f"Product with slug {product_slug} not found")
+    
+    product = await repo.get_product_with_pictures(product_id)
     if not product:
-        raise HTTPException(status=404, detail=f"Product with slug {product_slug} not found")
+        raise HTTPException(status_code=404, detail=f"Product with ID {product_id} not found or has no pictures")
+    
     return product
 
 
@@ -60,7 +66,7 @@ async def delete_product(product_id: int, db: AsyncSession = DBSessionDepAsync):
 
 
 @router.put("/products/{product_id}", response_model=Product)
-async def update_product(product_id: int, details: ProductUpdate, picture: UploadFile = None, db: AsyncSession = DBSessionDepAsync):
+async def update_product(product_id: int, details: ProductUpdate = Depends(), picture: UploadFile = File(None), db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     try:
         updated_product = await repo.update_product(product_id, details, picture)
