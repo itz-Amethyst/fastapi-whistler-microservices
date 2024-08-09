@@ -23,20 +23,20 @@ class GenericPictureRepository:
                 f.write(await picture.read())
                 
                 
-            picture_url = f"/{picture_path}"
+            picture_url = os.path.relpath(picture_path, start="uploads").replace(os.path.sep, '/')
 
             sql = text(
                 """
                 insert into generic_pictures (picture_url, content_type_id , object_id)
-                values (:picture_url, :content_type_id ,:object_id")
+                values (:picture_url, :content_type_id ,:object_id)
                 """
             )
 
             await self.session.execute(sql, {"picture_url": picture_url, "content_type_id": content_type_id, "object_id": product_id})
-            await self.session.commit()
+            # await self.session.commit()
         except Exception as e:
             await self.session.rollback()
-            print("Something went wrong while uploading picture: {e}")
+            print(f"Something went wrong while uploading picture: {e}")
             
     async def get_content_type_id(self, model_name: str) -> int:
         try:
@@ -53,7 +53,7 @@ class GenericPictureRepository:
             if content_type_id is None:
                 sql_insert = text(
                     """
-                    insert into content_types (model)
+                    insert into content_types 
                     values (:model_name)
                     returning id
                     """
@@ -61,7 +61,7 @@ class GenericPictureRepository:
                 
                 result = await self.session.execute(sql_insert, {"model_name": model_name})
                 content_type_id = result.scalar()
-                await self.session.commit()
+                # await self.session.commit()
                 
             return content_type_id
         except Exception as e:

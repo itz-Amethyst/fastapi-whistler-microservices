@@ -1,22 +1,29 @@
 from datetime import datetime
 from typing import List, Optional
 from fastapi import UploadFile
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, BaseModel as pydantic_model
 from slugify import slugify
 from common.schemes.base import BaseModel
 from common.schemes.image import Image 
 
 
 
-class ProductBase(BaseModel):
+class ProductBase_For_Response(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    created_time: datetime
+    modified: datetime
+    
+class ProductBase(pydantic_model):
     name: str
     description: Optional[str] = None
     price: float
     
-    
 class ProductCreate(ProductBase):
-    picture: Optional[UploadFile] = None
+    # picture: Optional[UploadFile] = None
 
+    pass
     # todo : requried checking (slugify applied on repo layer)
     # @field_validator('name')
     # def generate_slug(cls, v):
@@ -27,13 +34,13 @@ class ProductUpdate(ProductBase):
     name: Optional[str]
     description: Optional[str]
     price: Optional[float]
-    picture: Optional[UploadFile] = None
+    # picture: Optional[UploadFile] = None
 
     
-class Product(ProductBase):
+class Product(ProductBase_For_Response):
     id: int
     slug: str
-    seller: Optional[int]
+    seller_id: Optional[int]
     images: List[Image] = []
     is_deleted: bool 
 
