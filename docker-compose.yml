@@ -14,13 +14,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgres/data
 
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+  # It's an issue 
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
+  #     - ./configs/mongod.conf:/etc/mongo/mongod.conf
+  #   command: ['mongod', '--config', '/etc/mongo/mongod.conf']
 
   web:
     build:
@@ -53,7 +56,7 @@ services:
     ports:
       - '9090:9090'
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
 
@@ -69,41 +72,42 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
-  elasticsearch:
-    image: elasticsearch:5.6-alpine 
-    environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  # Commented for serverless deployment lack of memory
+  # elasticsearch:
+  #   image: elasticsearch:5.6-alpine 
+  #   environment:
+  #     - http.host=0.0.0.0
+  #     - transport.host=localhost
+  #     - network.host=0.0.0.0
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 1g
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   mem_limit: 1g
 
-  graylog:
-    image: graylog/graylog:3.3
-    environment:
-      - GRAYLOG_PASSWORD=${GRAYLOG_PASSWORD}
-      - GRAYLOG_PASSWORD_SHA=${GRAYLOG_PASSWORD_SHA}
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
-    depends_on:
-      - mongodb
-      - elasticsearch
+  # graylog:
+  #   image: graylog/graylog:3.3
+  #   environment:
+  #     - GRAYLOG_PASSWORD=${GRAYLOG_PASSWORD}
+  #     - GRAYLOG_PASSWORD_SHA=${GRAYLOG_PASSWORD_SHA}
+  #     - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+  #   depends_on:
+  #     - mongodb
+  #     - elasticsearch
 
-    ports:
-      # Graylog web interface and REST API
-      - 9000:9000
-      # Syslog TCP
-      - 1514:1514
-      # Syslog UDP
-      - 1514:1514/udp
-      # GELF TCP
-      - 12201:12201
-      # GELF UDP
-      - 12201:12201/udp
+  #   ports:
+  #     # Graylog web interface and REST API
+  #     - 9000:9000
+  #     # Syslog TCP
+  #     - 1514:1514
+  #     # Syslog UDP
+  #     - 1514:1514/udp
+  #     # GELF TCP
+  #     - 12201:12201
+  #     # GELF UDP
+  #     - 12201:12201/udp
 
 volumes:
   postgres_data:
