@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from common.db.session import Base
 from datetime import datetime
-from sqlalchemy import DateTime, Integer
+from sqlalchemy import DateTime, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.declarative import declared_attr 
 
@@ -23,8 +23,8 @@ class BaseModel(Base):
     #     modified: Mapped[datetime] = mapped_column(DateTime, default=date_time_sec, onupdate=date_time_sec, nullable=True)
     @declared_attr
     def created_time(self) -> Mapped[datetime]:
-        return mapped_column(DateTime, default=date_time_sec, nullable=False)
+        return mapped_column(DateTime, server_default=func.now(), nullable=False)
     
     @declared_attr
     def modified(self) -> Mapped[datetime]:
-        return mapped_column(DateTime, default=date_time_sec, onupdate=date_time_sec, nullable=True)
+        return mapped_column(DateTime, server_default=func.now(), onupdate=date_time_sec, nullable=True)
