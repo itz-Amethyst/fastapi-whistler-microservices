@@ -12,6 +12,7 @@ def create_access_token(subject: Union[str, Any], scopes: list[str] = None, expi
     to_encode = {"exp": expire, "sub": str(subject)}
     if request:
         request.session['scopes'] = scopes or []
+        request.session['sub'] = str(subject)
     else:
         to_encode['scopes'] = scopes or [] 
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
