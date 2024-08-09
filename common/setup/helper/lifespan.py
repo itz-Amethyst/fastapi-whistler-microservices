@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from common.db.session import sessionManager
 from common.utils.logger import logger_system
 from common.db.session import Base
+from discount_service.db.mongo import create_db_connection
 from user_service.setup.init_db import init_db
 
 
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI):
         conn.commit()
     
     await init_db()
+    await create_db_connection()
     yield
 
     logger_system.info("Shutting down the system.")
