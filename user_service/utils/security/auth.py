@@ -26,7 +26,7 @@ def generate_two_factor_recovery_code():
     
 # Note the scopes are static here find a better way to make them dynamic
 oauth_kwargs = {
-    "tokenUrl": "/users/oauth2",
+    "tokenUrl": "/user_service/users/oauth2",
     "scopes": {
         "discount_management": "Create, list or edit discounts",
         "product_management": "Create, list or edit products",
