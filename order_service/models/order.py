@@ -7,9 +7,9 @@ from enum import Enum
 import uuid
 
 class OrderStatus(str, Enum):
-    PENDING = "Pending"
-    CANCELED = "Canceled"
-    ACCEPTED = "Accepted"
+    PENDING = "PENDING"
+    CANCLED = "CANCLED" 
+    ACCEPTED = "ACCEPTED"
 
 
 class Order(BaseModel):
@@ -18,7 +18,7 @@ class Order(BaseModel):
     # Later can change the ref alghorithm
     reference_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     total_amount: Mapped[float] = mapped_column(Float, nullable=False) 
-    status: Mapped[OrderStatus] = mapped_column(SQLAEnum(OrderStatus), default=OrderStatus.PENDING, nullable=False) 
+    status: Mapped[OrderStatus] = mapped_column(SQLAEnum(OrderStatus),server_default=OrderStatus.PENDING, default=OrderStatus.PENDING, nullable=False) 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
 
     # ?! uselist=?!

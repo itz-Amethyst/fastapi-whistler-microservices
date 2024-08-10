@@ -1,4 +1,4 @@
-from common.schemes.base import BaseModel
+from pydantic import BaseModel 
 
 class OrderItemBase(BaseModel):
     product_id: int
@@ -6,8 +6,8 @@ class OrderItemBase(BaseModel):
     product_price: float
 
 class OrderItem(OrderItemBase):
-    pass
-
+    id: int
+    
     class Config:
         orm_mode = True
 
