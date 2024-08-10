@@ -1,11 +1,13 @@
 from common.dep.db import DBSessionDepAsync
-from typing import List
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Request, UploadFile
+from typing import List, Optional, Tuple, Union
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Request, Security, UploadFile
 from product_service.repository.product import ProductRepository
 from product_service.schemas import Product, ProductCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from product_service.schemas.product import ProductUpdate
+from user_service.models.user import User
+from user_service.utils.security.auth import AuthDependency
 
 router = APIRouter()
 
@@ -18,7 +20,10 @@ async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = DBSe
 
 # Todo: later add security retrive id dependency
 @router.post("/products", response_model=Product)
-async def create_product(req: Request, product: ProductCreate = Depends(), picture: UploadFile = File(None), db: AsyncSession = DBSessionDepAsync):
+async def create_product(req: Request, product: ProductCreate = Depends(), picture: UploadFile = File(None),
+                            auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+                            AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
+                         db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     
     product_result, success = await repo.insert_product(seller_id=int(req.session['sub']), product=product.model_dump(), picture=picture)
@@ -57,7 +62,9 @@ async def get_all_products_with_picture(db: AsyncSession = DBSessionDepAsync):
     return products
 
 @router.delete("/products/{product_id}", response_model=bool)
-async def delete_product(product_id: int, db: AsyncSession = DBSessionDepAsync):
+async def delete_product(product_id: int,auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+                            AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
+                            db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     success = await repo.delete_product(product_id)
     if not success:
@@ -66,7 +73,10 @@ async def delete_product(product_id: int, db: AsyncSession = DBSessionDepAsync):
 
 
 @router.put("/products/{product_id}", response_model=Product)
-async def update_product(product_id: int, details: ProductUpdate = Depends(), picture: UploadFile = File(None), db: AsyncSession = DBSessionDepAsync):
+async def update_product(product_id: int, details: ProductUpdate = Depends(), picture: UploadFile = File(None),
+                            auth_data: Union[None, Tuple[Optional[User], str]] = Security(
+                            AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
+                         db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     try:
         updated_product = await repo.update_product(product_id, details, picture)

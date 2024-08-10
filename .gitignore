@@ -13,3 +13,4 @@ logs
 log
 .vscode
 alembic/versions
+/uploads
