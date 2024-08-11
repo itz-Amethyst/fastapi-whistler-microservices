@@ -32,6 +32,13 @@ async def read_discount(discount_id: str):
         raise HTTPException(status_code=404, detail="Discount not found")
     return discount
 
+@router.put("/discounts/use_count/{discount_id}", response_model=Discount)
+async def update_use_count(discount_id: str):
+    discount = await repository.decrement_use_count(discount_id)
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    return discount
+
 @router.put("/discounts/{discount_id}", response_model=Discount)
 async def update_discount(discount_id: str, update_data: UpdateDiscount, auth_data: Union[None, Tuple[Optional[User], str]] = Security(
         AuthDependency(token_required=True, return_token=False), scopes=["full_control"])):
