@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, Float, Enum as SQLAEnum
+from sqlalchemy import Boolean, ForeignKey, Integer, sql, Float, Enum as SQLAEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID 
 from common.models.base import BaseModel
@@ -18,8 +18,10 @@ class Order(BaseModel):
     # Later can change the ref alghorithm
     reference_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     total_amount: Mapped[float] = mapped_column(Float, nullable=False) 
+    total_amount_with_discount: Mapped[float] = mapped_column(Float, nullable=True) 
     status: Mapped[OrderStatus] = mapped_column(SQLAEnum(OrderStatus),server_default=OrderStatus.PENDING, default=OrderStatus.PENDING, nullable=False) 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
+    is_discount_used: Mapped[bool] = mapped_column(Boolean, server_default=sql.false(), default=False, nullable=False)
 
     # ?! uselist=?!
     user = relationship(User, back_populates="orders")

@@ -19,7 +19,7 @@ async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = DBSe
     return products
 
 @router.post("/products", response_model=Product)
-async def create_product(req: Request, tasks: BackgroundTasks, product: ProductCreate = Depends(), picture: UploadFile = File(None),
+async def create_product(req: Request, tasks: BackgroundTasks, product: ProductCreate = Depends(), picture: UploadFile = File(None, description='Provide an avatar', media_type=['image/jpeg', 'image/png']),
                             auth_data: Union[None, Tuple[Optional[User], str]] = Security(
                             AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
                         db: AsyncSession = DBSessionDepAsync):

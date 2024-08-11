@@ -18,7 +18,6 @@ async def get_all_orders(skip:int = 0, limit:int = 10, db: AsyncSession = DBSess
     orders = await repo.get_all_orders(skip=skip, limit=limit)
     return orders 
 
-# Todo: later add security retrive id dependency
 @router.post("/orders", response_model=Order)
 async def create_order(req: Request, order: OrderCreate,
                             auth_data: Union[None, Tuple[Optional[User], str]] = Security(

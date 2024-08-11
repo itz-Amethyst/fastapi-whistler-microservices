@@ -21,20 +21,12 @@ class ProductBase(pydantic_model):
     price: float
     
 class ProductCreate(ProductBase):
-    # picture: Optional[UploadFile] = None
-
     pass
-    # todo : requried checking (slugify applied on repo layer)
-    # @field_validator('name')
-    # def generate_slug(cls, v):
-    #     return slugify(v)
-
 
 class ProductUpdate(ProductBase):
     name: Optional[str]
     description: Optional[str]
     price: Optional[float]
-    # picture: Optional[UploadFile] = None
 
     
 class Product(ProductBase_For_Response):

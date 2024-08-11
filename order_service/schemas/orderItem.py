@@ -12,8 +12,10 @@ class OrderItem(OrderItemBase):
         orm_mode = True
 
 
-class OrderItemCreate(OrderItemBase):
-    pass 
+class OrderItemCreate(BaseModel):
+    product_id: int
+    quantity: int
 
-class OrderItemUpdate(OrderItemBase):
-    pass
+class OrderItemUpdate(BaseModel):
+    product_id: int
+    quantity: int
