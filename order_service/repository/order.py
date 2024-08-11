@@ -1,12 +1,17 @@
+from datetime import datetime
 from typing import Optional, Union
 import uuid
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+import httpx
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from common.config import settings
+from discount_service.schemas.discount import Discount
 from order_service.repository.orderItems import OrderItemsRepository
 from order_service.schemas import OrderCreate, Order, OrderUpdate
 from common.utils.logger import logger_system
+from product_service.schemas.product import Product
 
 
 class OrderRepository:
@@ -14,7 +19,47 @@ class OrderRepository:
     def __init__(self, sess: AsyncSession) -> None:
         self.session = sess
         self.orderItemsRepo = OrderItemsRepository(sess)
+        self.http_client = httpx.AsyncClient()
     
+    async def _make_request(self, method: str, endpoint: str, json: Optional[dict] = None) -> Optional[dict]:
+        try:
+            url = f"http://{settings.BASE_URL}/{endpoint}"
+            if method in ["GET", "POST", "PUT", "DELETE"]:
+                response = await self.http_client.request(method, url, json=json)
+            else:
+                raise ValueError(f"Unsupported value {method}")
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Request to {url} failed with status code {response.status_code}")
+                raise HTTPException(status_code=response.status_code, detail="Resource not found")
+        
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e}")
+            raise HTTPException(status_code=500, detail="An error occurred while making the request")
+        except Exception as e:
+            print(f"Unexpected error occurred: {e}")
+            raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        finally:
+            await self.http_client.aclose()
+
+    async def get_product_by_id(self, product_id: int) -> Optional[Product]:
+        endpoint = f"product_service/products/{product_id}"
+        response_data = await self._make_request("GET", endpoint)
+        return Product(**response_data) if response_data else None
+
+    async def get_discount_by_id(self, discount_id: str) -> Optional[Discount]:
+        endpoint = f"/discounts/{discount_id}"
+        response_data = await self._make_request("GET", endpoint)
+        return Discount(**response_data) if response_data else None
+
+    async def decrement_discount_use_count(self, discount_id: str) -> bool:
+        endpoint = f"/discounts/use_count/{discount_id}"
+        response_data = await self._make_request("PUT", endpoint)
+        return response_data is not None
+
+
     async def check_pending_order(self, user_id: int) -> bool:
         sql = text(
             """
@@ -29,14 +74,47 @@ class OrderRepository:
             if await self.check_pending_order(user_id):
                 return True, None
             
-            order_data = jsonable_encoder(order, exclude={"order_items"})
-            order_data['reference_id'] = str(uuid.uuid4())
-            order_data['status'] = order_data['status'].upper()
-            order_data['user_id'] = user_id
+            total_amount = 0.0
+            for item in order.order_items:
+                product = await self.get_product_by_id(item.product_id)
+                if not product:
+                    raise HTTPException(status_code=404, detail=f"Product with ID {item.product_id} not found")
+                
+                total_amount += product.price * item.quantity
+                
+            # Apply discount if provided
+            is_discount_used = False
+            discount_amount = 0.0
+            if order.discount_token:
+                discount = await self.get_discount_by_id(order.discount_token)
+                if not discount or discount.use_count <= 0:
+                    raise HTTPException(status_code=404, detail=f"Discount with token {order.discount_token} not found")
+
+                if discount.start_date <= datetime.utcnow() <= discount.end_date:
+                    discount_amount = total_amount * (discount.percentage / 100)
+                    is_discount_used = True
+                    if not await self.decrement_discount_use_count(order.discount_token):
+                        raise HTTPException(status_code=500, detail="Failed to update discount use count")
+                else:
+                    raise HTTPException(status_code=400, detail="Discount token is expired")
+            else:
+                discount_amount = 0.0
+            
+            total_amount_with_discount = total_amount - discount_amount
+            
+            
+            order_data = {
+                'reference_id': str(uuid.uuid4()),
+                'total_amount': total_amount,
+                'status': 'PENDING',
+                'user_id': user_id,
+                'is_discount_used': is_discount_used,
+                'total_amount_with_discount': total_amount_with_discount if is_discount_used else total_amount
+            }
             sql = text(
                 """
-                insert into orders (reference_id, total_amount, status, user_id)
-                values (:reference_id, :total_amount, :status, :user_id)
+                insert into orders (reference_id, total_amount, status, user_id, is_discount_used, total_amount_with_discount)
+                values (:reference_id, :total_amount, :status, :user_id, :is_discount_used, :total_amount_with_discount)
                 returning id ,reference_id, total_amount, status, user_id
                 """
             )
