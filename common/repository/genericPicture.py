@@ -1,9 +1,14 @@
 import os
 from pathlib import Path
 import uuid
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+import aiofiles
+
+from common.utils.recursion import RecursionDepth
+
+BYTES_SIZE: int = 1000000
 
 class GenericPictureRepository:
     
@@ -18,10 +23,14 @@ class GenericPictureRepository:
             Path(base_path).mkdir(parents = True, exist_ok = True)
             picture_filename = f"{uuid.uuid4()}.jpg" 
             picture_path = os.path.join(base_path, picture_filename)
+            file_content = await picture.read()
+            if len((file_content) / BYTES_SIZE >= 4):
+                raise HTTPException(400, {"message": "File size must be lower than 4MB"})
 
-            with open(picture_path, "wb") as f:
-                f.write(await picture.read())
-                
+            # override the recursion depth level to avoid infinite recursion               
+            with RecursionDepth(3000):
+                async with aiofiles.open(picture_path, "wb") as file:
+                    await file.write(file_content)
                 
             picture_url = os.path.relpath(picture_path, start="uploads").replace(os.path.sep, '/')
 
