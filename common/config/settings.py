@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "WARNING"
     DEBUG: str = True
     BACKEND_CORS_ORIGINS: str | List[str]
+    BASE_URL: str 
 
     # imagine something like this lit print("")
     EMAIL_TEMPLATES_DIR: str

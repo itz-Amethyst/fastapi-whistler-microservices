@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import uuid
 from common.schemes.base import BaseModel
 from pydantic import BaseModel as pydantic_basemodel
@@ -11,15 +11,13 @@ class OrderBase_Without_Pydantic(BaseModel):
     total_amount: float
     status: OrderStatus 
     user_id: int
+    discount_token: Optional[str] = None
     
-class OrderBase(pydantic_basemodel):
-    total_amount: float
-    status: str 
-
-class OrderCreate(OrderBase):
+class OrderCreate(BaseModel):
+    discount_token: Optional[str]
     order_items: List[OrderItemCreate]
 
-class OrderUpdate(OrderBase):
+class OrderUpdate(BaseModel):
     order_items: List[OrderItemUpdate]
 
 class Order(OrderBase_Without_Pydantic):
