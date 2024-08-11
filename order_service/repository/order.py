@@ -23,7 +23,7 @@ class OrderRepository:
     
     async def _make_request(self, method: str, endpoint: str, json: Optional[dict] = None) -> Optional[dict]:
         try:
-            url = f"http://{settings.BASE_URL}/{endpoint}"
+            url = f"{settings.BASE_URL}/{endpoint}"
             if method in ["GET", "POST", "PUT", "DELETE"]:
                 response = await self.http_client.request(method, url, json=json)
             else:
@@ -41,8 +41,6 @@ class OrderRepository:
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             raise HTTPException(status_code=500, detail="An unexpected error occurred")
-        finally:
-            await self.http_client.aclose()
 
     async def get_product_by_id(self, product_id: int) -> Optional[Product]:
         endpoint = f"product_service/products/{product_id}"
@@ -50,12 +48,12 @@ class OrderRepository:
         return Product(**response_data) if response_data else None
 
     async def get_discount_by_id(self, discount_id: str) -> Optional[Discount]:
-        endpoint = f"/discounts/{discount_id}"
+        endpoint = f"discount_service/discounts/{discount_id}"
         response_data = await self._make_request("GET", endpoint)
         return Discount(**response_data) if response_data else None
 
     async def decrement_discount_use_count(self, discount_id: str) -> bool:
-        endpoint = f"/discounts/use_count/{discount_id}"
+        endpoint = f"discount_service/discounts/use_count/{discount_id}"
         response_data = await self._make_request("PUT", endpoint)
         return response_data is not None
 
@@ -75,12 +73,20 @@ class OrderRepository:
                 return True, None
             
             total_amount = 0.0
+            updated_order_items = []
             for item in order.order_items:
                 product = await self.get_product_by_id(item.product_id)
                 if not product:
                     raise HTTPException(status_code=404, detail=f"Product with ID {item.product_id} not found")
                 
                 total_amount += product.price * item.quantity
+                product_price = product.price
+                updated_order_items.append({
+                    'product_id': item.product_id,
+                    'quantity': item.quantity,
+                    'product_price': product_price
+                })
+                
                 
             # Apply discount if provided
             is_discount_used = False
@@ -124,13 +130,13 @@ class OrderRepository:
             if not db_order:
                 return False, None
             
-            await self.orderItemsRepo.create_order_items(db_order.id, order.order_items)
+            await self.orderItemsRepo.create_order_items(db_order.id, updated_order_items)
             await self.session.commit()
 
             return False, await self.get_order_by_id(db_order.id)
         except Exception as e:
             await self.session.rollback()
-            print(f"Something went worng while creating order: {e}")
+            logger_system.error(f"Something went worng while creating order: {e}")
     
     async def update_order(self, order_id: int, order_update: OrderUpdate) -> Optional[Order]:
         try:
@@ -182,7 +188,7 @@ class OrderRepository:
         try:
             sql = text(
                 """
-                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time,
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time, o.is_discount_used, o.total_amount_with_discount,
                    oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
                 from orders o
                 left join order_items oi on o.id = oi.order_id
@@ -207,7 +213,7 @@ class OrderRepository:
         try:
             sql = text(
                 """
-                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time,
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time, o.is_discount_used, o.total_amount_with_discount,
                    oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
                 from orders o
                 left join order_items oi on o.id = oi.order_id
@@ -232,7 +238,7 @@ class OrderRepository:
         try:
             sql = text(
                 """
-                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time,
+                select o.id, o.reference_id, o.total_amount, o.status, o.user_id, o.modified, o.created_time, o.is_discount_used, o.total_amount_with_discount,
                    oi.id as order_item_id, oi.product_id, oi.quantity, oi.product_price 
                 from orders o
                 left join order_items oi on o.id = oi.order_id
@@ -281,6 +287,8 @@ class OrderRepository:
                 "user_id": first_row["user_id"],
                 "created_time": first_row["created_time"],
                 "modified": first_row["modified"],
+                "is_discount_used": first_row['is_discount_used'],
+                "total_amount_with_discount": first_row['total_amount_with_discount']
             }
 
             order_items = [

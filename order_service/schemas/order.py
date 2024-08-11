@@ -12,12 +12,14 @@ class OrderBase_Without_Pydantic(BaseModel):
     status: OrderStatus 
     user_id: int
     discount_token: Optional[str] = None
+    is_discount_used: bool
+    total_amount_with_discount: Optional[float]
     
-class OrderCreate(BaseModel):
-    discount_token: Optional[str]
+class OrderCreate(pydantic_basemodel):
+    discount_token: Optional[str] = None
     order_items: List[OrderItemCreate]
 
-class OrderUpdate(BaseModel):
+class OrderUpdate(pydantic_basemodel):
     order_items: List[OrderItemUpdate]
 
 class Order(OrderBase_Without_Pydantic):

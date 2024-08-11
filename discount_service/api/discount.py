@@ -25,16 +25,23 @@ async def create_discount(discount: CreateDiscount, auth_data: Union[None, Tuple
         raise HTTPException(status_code=500, detail="Failed to create discount")
     return result
 
-@router.get("/discounts/{discount_id}", response_model=Discount)
+@router.get("/discounts/id/{discount_id}", response_model=Discount)
 async def read_discount(discount_id: str):
     discount = await repository.get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
     return discount
 
-@router.put("/discounts/use_count/{discount_id}", response_model=Discount)
-async def update_use_count(discount_id: str):
-    discount = await repository.decrement_use_count(discount_id)
+@router.get("/discounts/{discount_code}", response_model=Discount)
+async def read_discount(discount_code: str):
+    discount = await repository.get_by_token(discount_code)
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    return discount
+
+@router.put("/discounts/use_count/{discount_token}", response_model=Discount)
+async def update_use_count(discount_token: str):
+    discount = await repository.decrement_use_count(discount_token)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
     return discount

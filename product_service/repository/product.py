@@ -10,6 +10,7 @@ from product_service.models.product import Product as ProductModel
 from product_service.schemas import Product 
 from common.repository.genericPicture import GenericPictureRepository
 from product_service.schemas.product import ProductCreate
+from common.utils.logger import logger_system
 
 class ProductRepository:
     
@@ -63,7 +64,7 @@ class ProductRepository:
             return data, True
         except Exception as e :
             await self.session.rollback()
-            print(f"Error while creating product: {e}")
+            logger_system.error(f"Error while creating product: {e}")
             return [], False
             
     async def get_all_products(self, skip:int = 0 , limit:int = 10) ->List[Product]:
@@ -73,7 +74,7 @@ class ProductRepository:
             products = result.mappings().all()
             return [Product(**product) for product in products]
         except Exception as e:
-            print(f"Error fetching data: {e}")
+            logger_system.error(f"Error fetching data: {e}")
             return [] 
 
 
@@ -101,7 +102,7 @@ class ProductRepository:
             return updated_product 
         except Exception as e:
             await self.session.rollback()
-            print(f"something went wrong while updating product: {e}")
+            logger_system.error(f"something went wrong while updating product: {e}")
             return False
 
     async def delete_product(self, product_id: int) -> bool:
@@ -120,7 +121,7 @@ class ProductRepository:
         
         except Exception as e:
             await self.session.rollback()
-            print(f"something went wrong while deleting a product: {e}")
+            logger_system.error(f"something went wrong while deleting a product: {e}")
             return False
             
     async def get_product_with_pictures(self, product_id: int) -> Optional[Product]:
@@ -161,7 +162,7 @@ class ProductRepository:
             return Product(**current_product_dict)
         except Exception as e:
             await self.session.rollback()
-            print(f"Something went wrong while fetching product with pictures: {e}")
+            logger_system.error(f"Something went wrong while fetching product with pictures: {e}")
             return None
         
     async def get_all_products_with_pictures(self, skip: int = 0,limit: int = 10) -> List[Product]:
@@ -206,7 +207,7 @@ class ProductRepository:
             return products
         except Exception as e:
             await self.session.rollback()
-            print(f"Something went wrong while fetching all products with pictures: {e}")
+            logger_system.error(f"Something went wrong while fetching all products with pictures: {e}")
             return []
     
     async def get_product_by_slug(self, slug: str) -> Optional[int]:
@@ -221,30 +222,30 @@ class ProductRepository:
             product = result.scalar_one_or_none()
             return product if product is not None else None
         except Exception as e:
-            print(f"Something went wrong while fetching product by slug: {e}")
+            logger_system.error(f"Something went wrong while fetching product by slug: {e}")
             return None
     
     # without images
-    # async def get_product_by_id(self, product_id: int) -> Product:
-    #     try:
-    #         sql = text(
-    #             """
-    #             select * from products
-    #             where id = :product_id
-    #             """
-    #         ) 
+    async def get_product_by_id(self, product_id: int) -> Product:
+        try:
+            sql = text(
+                """
+                select * from products
+                where id = :product_id
+                """
+            ) 
 
-    #         result = await self.session.execute(sql, {"product_id": product_id})
-    #         product_row = result.fetchone()  # Fetch a single row
+            result = await self.session.execute(sql, {"product_id": product_id})
+            product_row = result.fetchone()  # Fetch a single row
             
-    #         if product_row is None:
-    #             raise Exception(f"Product with ID {product_id} not found.")
+            if product_row is None:
+                raise Exception(f"Product with ID {product_id} not found.")
             
-    #         # Convert the row to a dictionary
-    #         columns = result.keys()  # Get column names
-    #         product_data = dict(zip(columns, product_row))
+            # Convert the row to a dictionary
+            columns = result.keys()  # Get column names
+            product_data = dict(zip(columns, product_row))
         
-    #         return product_data
-    #     except Exception as e:
-    #         print(f"Error while fetching product: {e}")
-    #         return None
+            return product_data
+        except Exception as e:
+            logger_system.error(f"Error while fetching product: {e}")
+            return None

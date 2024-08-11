@@ -23,6 +23,16 @@ class DiscountRepository:
             logger_system.error(e)
             return None
 
+    async def get_by_token(self, discount_token: str) -> Optional[DiscountResponse]:
+        try:
+            discount = await Discount.find_one(Discount.code == discount_token)
+            if discount:
+                discount.id = str(discount.id)
+            return discount
+        except Exception as e:
+            logger_system.error(e)
+            return None
+
     async def update(self, discount_id: str, update_data: dict) -> Optional[DiscountResponse]:
         try:
             discount = await Discount.get(ObjectId(discount_id))
@@ -34,15 +44,15 @@ class DiscountRepository:
             logger_system.error(e)
             return None
 
-    async def decrement_use_count(self, discount_id: str) -> Optional[Discount]:
+    async def decrement_use_count(self, discount_token: str) -> Optional[Discount]:
         try:
             # in get i modified id so it's better to retrieve again here
-            discount = await Discount.get(ObjectId(discount_id))
+            discount = await Discount.find_one(Discount.code == discount_token)
             if not discount:
                 return None
             
             await discount.update({"$inc": {'use_count': -1}})
-            updated_discount = await self.get(discount_id)
+            updated_discount = await self.get_by_token(discount_token)
             return updated_discount
         except Exception as e:
             logger_system(f"Error updating use count: {e}")
