@@ -1,6 +1,6 @@
 from common.dep.db import DBSessionDepAsync
 from typing import List, Optional, Tuple, Union
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Request, Security, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, HTTPException, Request, Security, UploadFile
 from product_service.repository.product import ProductRepository
 from product_service.schemas import Product, ProductCreate
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,17 +18,17 @@ async def get_all_products(skip:int = 0, limit:int = 10, db: AsyncSession = DBSe
     products = await repo.get_all_products_with_pictures(skip, limit)
     return products
 
-# Todo: later add security retrive id dependency
 @router.post("/products", response_model=Product)
-async def create_product(req: Request, product: ProductCreate = Depends(), picture: UploadFile = File(None),
+async def create_product(req: Request, tasks: BackgroundTasks, product: ProductCreate = Depends(), picture: UploadFile = File(None),
                             auth_data: Union[None, Tuple[Optional[User], str]] = Security(
                             AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
-                         db: AsyncSession = DBSessionDepAsync):
+                        db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     
     product_result, success = await repo.insert_product(seller_id=int(req.session['sub']), product=product.model_dump(), picture=picture)
     if not success:
         raise HTTPException(status_code = 400, detail= product_result)
+    
 
     return product_result
 

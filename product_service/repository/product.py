@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
-from fastapi import UploadFile
+from fastapi import BackgroundTasks, UploadFile
 from slugify import slugify
 from sqlalchemy import delete, update, insert, text
 from sqlalchemy.future import select
@@ -28,7 +28,7 @@ class ProductRepository:
         return count > 0
 
     #fix seller_id later to retrieve real data
-    async def insert_product(self, seller_id: int, product: ProductCreate, picture: UploadFile = None) -> Union[Any, bool]:
+    async def insert_product(self, seller_id: int, product: ProductCreate, picture: UploadFile = None, tasks: BackgroundTasks = None) -> Union[Any, bool]:
         try:
             if await self.product_name_exists(product['name']):
                 print(f"Product with name '{product['name']}' already exists.")
@@ -46,8 +46,13 @@ class ProductRepository:
             result = await self.session.execute(sql, {**product_data, "is_deleted": False})
             product_id = result.fetchone()[0]
             
-            if picture:
-                await self.generic_picture_repo.add_picture(product_id, picture, model_name = ProductModel.__tablename__)
+            if picture and tasks:
+                tasks.add_task(
+                    self.generic_picture_repo.add_picture,
+                    product_id,
+                    picture,
+                    model_name=ProductModel.__tablename__
+                )
 
             await self.session.commit()
             if picture:
