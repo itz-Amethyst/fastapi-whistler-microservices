@@ -37,7 +37,7 @@ async def get_product_by_id(product_id :int, db: AsyncSession = DBSessionDepAsyn
     repo = ProductRepository(db)
     product = await repo.get_product_with_pictures(product_id)
     if not product:
-        raise HTTPException(status=404, detail=f"Product with id {product_id} not found")
+        raise HTTPException(status_code=404, detail=f"Product with id {product_id} not found")
     return product
 
 # Todo 

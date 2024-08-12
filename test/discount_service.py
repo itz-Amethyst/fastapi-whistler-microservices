@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 discount_id = None
 server_process = None
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8000/discount_service"
 
 # IDK what's wrong with this
 
@@ -62,7 +62,7 @@ def create_discount(client, discount_data):
     return response.json()
 
 def read_discount(client, discount_id):
-    response = client.get(f"/discounts/{discount_id}")
+    response = client.get(f"/discounts/id/{discount_id}")
     return response.json()
 
 def update_discount(client, discount_id, update_data):

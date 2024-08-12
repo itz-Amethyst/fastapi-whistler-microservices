@@ -24,9 +24,7 @@ async def create_order(req: Request, order: OrderCreate,
                             AuthDependency(token_required=True, return_token=False), scopes=["full_control"]),
                        db: AsyncSession = DBSessionDepAsync):
     repo = OrderRepository(db)
-    exists, created_order = await repo.create_order(user_id=int(req.session['sub']), order=order) 
-    if exists:
-        raise HTTPException(status_code= 400, detail=f"User already has an order with status PENDING.")
+    created_order = await repo.create_order(user_id=int(req.session['sub']), order=order) 
     if not created_order:
         raise HTTPException(status_code = 400, detail= "order creation Failed")
 
