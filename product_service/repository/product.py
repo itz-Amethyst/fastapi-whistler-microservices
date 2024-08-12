@@ -144,7 +144,6 @@ class ProductRepository:
                 return None
             
 
-            # Return as Product model
             current_product_dict = None
             
             for row in rows:

@@ -9,6 +9,7 @@ import aiofiles
 from common.utils.recursion import RecursionDepth
 
 BYTES_SIZE: int = 1000000
+CHUNK_SIZE: int = 1024 * 1024 # 1MB
 
 class GenericPictureRepository:
     
@@ -23,14 +24,19 @@ class GenericPictureRepository:
             Path(base_path).mkdir(parents = True, exist_ok = True)
             picture_filename = f"{uuid.uuid4()}.jpg" 
             picture_path = os.path.join(base_path, picture_filename)
-            file_content = await picture.read()
-            if len((file_content) / BYTES_SIZE >= 4):
-                raise HTTPException(400, {"message": "File size must be lower than 4MB"})
 
+            total_size = 0
             # override the recursion depth level to avoid infinite recursion               
             with RecursionDepth(3000):
                 async with aiofiles.open(picture_path, "wb") as file:
-                    await file.write(file_content)
+                    while True:
+                        chunk = await picture.read(CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        file.write(chunk)
+                        total_size += len(chunk)
+                        if total_size > 4 * BYTES_SIZE:
+                            raise HTTPException(400, {"message": "File size must be lower than 4MB"})
                 
             picture_url = os.path.relpath(picture_path, start="uploads").replace(os.path.sep, '/')
 
@@ -43,6 +49,10 @@ class GenericPictureRepository:
 
             await self.session.execute(sql, {"picture_url": picture_url, "content_type_id": content_type_id, "object_id": product_id})
             # await self.session.commit()
+        except HTTPException as http_exc:
+            if os.path.exists(picture_path):
+                os.remove(picture_path)
+            raise http_exc 
         except Exception as e:
             await self.session.rollback()
             print(f"Something went wrong while uploading picture: {e}")

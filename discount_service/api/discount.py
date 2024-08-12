@@ -33,7 +33,7 @@ async def read_discount(discount_id: str):
     return discount
 
 @router.get("/discounts/{discount_code}", response_model=Discount)
-async def read_discount(discount_code: str):
+async def read_discount_by_code(discount_code: str):
     discount = await repository.get_by_token(discount_code)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
