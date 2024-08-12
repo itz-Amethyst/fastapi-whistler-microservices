@@ -1,9 +1,6 @@
 .venv/
 /venv
-.env
 
-.env.secrets
-.env*
 dist/
 build/
 __pycache__
