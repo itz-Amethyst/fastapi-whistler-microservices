@@ -1,6 +1,8 @@
+import asyncio
 from datetime import datetime
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 import uuid
+from aiohttp import ClientSession
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 import httpx
@@ -19,27 +21,25 @@ class OrderRepository:
     def __init__(self, sess: AsyncSession) -> None:
         self.session = sess
         self.orderItemsRepo = OrderItemsRepository(sess)
-        self.http_client = httpx.AsyncClient()
+        self.http_client = ClientSession()
     
     async def _make_request(self, method: str, endpoint: str, json: Optional[dict] = None) -> Optional[dict]:
         try:
             url = f"{settings.BASE_URL}/{endpoint}"
             if method in ["GET", "POST", "PUT", "DELETE"]:
-                response = await self.http_client.request(method, url, json=json)
+                async with self.http_client.request(method, url, json=json) as response:
+                    # be in range of 2xx range
+                    if 200 <= response.status < 300:
+                        return await response.json()
+                    else:
+                        logger_system.error(f"Request to {url} failed with status code {response.status}")
+                        raise HTTPException(status_code=response.status, detail="Resource not found")
+
             else:
                 raise ValueError(f"Unsupported value {method}")
             
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"Request to {url} failed with status code {response.status_code}")
-                raise HTTPException(status_code=response.status_code, detail="Resource not found")
-        
-        except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e}")
-            raise HTTPException(status_code=500, detail="An error occurred while making the request")
         except Exception as e:
-            print(f"Unexpected error occurred: {e}")
+            logger_system.error(f"Unexpected error occurred: {e}")
             raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
     async def get_product_by_id(self, product_id: int) -> Optional[Product]:
@@ -67,18 +67,24 @@ class OrderRepository:
         result = await self.session.execute(sql, {'user_id': user_id})
         return result.scalar() is not None
     
-    async def create_order(self, user_id:int, order: OrderCreate) -> Union[bool,Optional[Order]]:
+    async def create_order(self, user_id:int, order: OrderCreate) -> Optional[Order]:
         try:
             if await self.check_pending_order(user_id):
-                return True, None
-            
+                raise HTTPException(400, f"User already has a PENDING order")
+           
             total_amount = 0.0
             updated_order_items = []
-            for item in order.order_items:
-                product = await self.get_product_by_id(item.product_id)
+
+            # concurrency 
+            product_tasks = [
+                self.get_product_by_id(item.product_id) for item in order.order_items
+            ]
+            products = await asyncio.gather(*product_tasks)
+            
+            for item, product in zip(order.order_items, products):
                 if not product:
                     raise HTTPException(status_code=404, detail=f"Product with ID {item.product_id} not found")
-                
+
                 total_amount += product.price * item.quantity
                 product_price = product.price
                 updated_order_items.append({
@@ -86,7 +92,6 @@ class OrderRepository:
                     'quantity': item.quantity,
                     'product_price': product_price
                 })
-                
                 
             # Apply discount if provided
             is_discount_used = False
@@ -128,12 +133,16 @@ class OrderRepository:
             # mapping
             db_order = result.fetchone()
             if not db_order:
-                return False, None
+                return None
             
             await self.orderItemsRepo.create_order_items(db_order.id, updated_order_items)
             await self.session.commit()
 
-            return False, await self.get_order_by_id(db_order.id)
+            return await self.get_order_by_id(db_order.id)
+        
+        except HTTPException as http_exc:
+            logger_system.error("something went wrong")
+            raise http_exc
         except Exception as e:
             await self.session.rollback()
             logger_system.error(f"Something went worng while creating order: {e}")
@@ -249,28 +258,25 @@ class OrderRepository:
             result = await self.session.execute(sql, {"skip": skip, "limit": limit})
             rows = result.mappings().all()
             
-            orders = []
-            current_order_id = None
-            current_order_rows = [] 
+            orders_map: Dict[int, List[dict]] = {}
             
             for row in rows:
-                if row['id'] != current_order_id:
-                    if current_order_rows:
-                        order_data = self._extract_order_data(current_order_rows)
-                        orders.append(Order(**order_data))
-
-                    current_order_id = row['id']
-                    current_order_rows = []
-                current_order_rows.append(row)
-
-            if current_order_rows:
-                order_data = self._extract_order_data(current_order_rows)
-                orders.append(Order(**order_data))
+                order_id = row['id']
+                if order_id not in orders_map:
+                    orders_map[order_id] = []
+                orders_map[order_id].append(row)
+            
+            # concurrency
+            order_tasks = [self._process_order(order_rows) for order_rows in orders_map.values()]
+            orders = await asyncio.gather(*order_tasks)
 
             return orders
         except Exception as e:
             print(f"Error fetching all orders: {e}")
             return []
+    async def _process_order(self, order_rows: List[dict]) -> Order:
+        order_data = self._extract_order_data(order_rows)
+        return Order(**order_data)
 
     def _extract_order_data(self, rows) -> dict:
         try:
