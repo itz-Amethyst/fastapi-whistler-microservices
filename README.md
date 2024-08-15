@@ -46,6 +46,7 @@ The main purpose of this proejct is to explore the potentials of FastAPI in buil
 ### **You can use my .env as an example but be aware to change that later**
 ---
 
+- #### **Note: After running the project you can authenticate with User: `admin` , Password: `test` credentials in order to have access to apis**
 ## Running with Docker
 
 To quickly get started with Docker, follow these steps:
