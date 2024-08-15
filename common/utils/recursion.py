@@ -13,5 +13,5 @@ class RecursionDepth:
     def __enter__(self):
         sys.setrecursionlimit(self.limit)
         
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         sys.setrecursionlimit(self.default_limit)
