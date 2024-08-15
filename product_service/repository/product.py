@@ -1,3 +1,4 @@
+import copy
 from typing import Any, Dict, List, Optional, Union
 from fastapi import BackgroundTasks, UploadFile
 from slugify import slugify
@@ -46,12 +47,11 @@ class ProductRepository:
                 """) 
             result = await self.session.execute(sql, {**product_data, "is_deleted": False})
             product_id = result.fetchone()[0]
-            
             if picture and tasks:
                 tasks.add_task(
                     self.generic_picture_repo.add_picture,
                     product_id,
-                    picture,
+                    copy.deepcopy(picture),
                     model_name=ProductModel.__tablename__
                 )
 

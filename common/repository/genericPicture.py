@@ -19,7 +19,6 @@ class GenericPictureRepository:
     async def add_picture(self, product_id:int ,picture: UploadFile, model_name: str):
         try:
             content_type_id = await self.get_content_type_id(model_name)
-            # Todo
             base_path = f"uploads/{model_name}"
             Path(base_path).mkdir(parents = True, exist_ok = True)
             picture_filename = f"{uuid.uuid4()}.jpg" 
@@ -33,7 +32,7 @@ class GenericPictureRepository:
                         chunk = await picture.read(CHUNK_SIZE)
                         if not chunk:
                             break
-                        file.write(chunk)
+                        await file.write(chunk)
                         total_size += len(chunk)
                         if total_size > 4 * BYTES_SIZE:
                             raise HTTPException(400, {"message": "File size must be lower than 4MB"})
@@ -48,7 +47,7 @@ class GenericPictureRepository:
             )
 
             await self.session.execute(sql, {"picture_url": picture_url, "content_type_id": content_type_id, "object_id": product_id})
-            # await self.session.commit()
+            await self.session.commit()
         except HTTPException as http_exc:
             if os.path.exists(picture_path):
                 os.remove(picture_path)

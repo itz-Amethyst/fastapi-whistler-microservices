@@ -25,7 +25,7 @@ async def create_product(req: Request, tasks: BackgroundTasks, product: ProductC
                         db: AsyncSession = DBSessionDepAsync):
     repo = ProductRepository(db)
     
-    product_result, success = await repo.insert_product(seller_id=int(req.session['sub']), product=product.model_dump(), picture=picture)
+    product_result, success = await repo.insert_product(seller_id=int(req.session['sub']), product=product.model_dump(), picture=picture, tasks=tasks)
     if not success:
         raise HTTPException(status_code = 400, detail= product_result)
     
