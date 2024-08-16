@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+from time import sleep
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -11,6 +12,7 @@ from common.db.session import DBSessionManager, metadata
 from common.db.session import Base
 
 #? Custom models
+from product_service import models
 from user_service import models
 from order_service import models
 
@@ -42,11 +44,14 @@ target_metadata = Base.metadata
 # ... etc.
 
 #? Custom
-
-def run_setup_on_migration(context):
+def run_setup_on_migration(ctx, **args):
+    with context.begin_transaction():
+        context.run_migrations()
+    sleep(1)
     with DBSessionManager().session_sync() as session:
-        PictureMixin().setup(session)
-
+        for class_ in PictureMixin.__subclasses__():
+            print(f"Running setup for {class_.__name__}")
+            class_.setup(session)
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -66,14 +71,10 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        #! Todo: be here or not ?
-        # process_revision_directives=run_setup_on_migration 
     )
 
     with context.begin_transaction():
         context.run_migrations()
-        # custom
-        run_setup_on_migration(context)
 
 
 def run_migrations_online() -> None:
@@ -91,15 +92,12 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata 
-            #! Todo: be here or not ?
-            # process_revision_directives=run_setup_on_migration 
+            connection=connection, target_metadata=target_metadata ,
+            on_version_apply=run_setup_on_migration
         )
 
         with context.begin_transaction():
             context.run_migrations()
-            # Custom
-            run_setup_on_migration(context)
 
 
 if context.is_offline_mode():
