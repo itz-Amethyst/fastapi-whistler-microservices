@@ -27,4 +27,4 @@ class BaseModel(Base):
     
     @declared_attr
     def modified(self) -> Mapped[datetime]:
-        return mapped_column(DateTime, server_default=func.now(), onupdate=date_time_sec, nullable=True)
+        return mapped_column(DateTime, onupdate=date_time_sec, nullable=True)

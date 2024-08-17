@@ -13,7 +13,7 @@ class ProductBase_For_Response(BaseModel):
     description: Optional[str] = None
     price: float
     created_time: datetime
-    modified: datetime
+    modified: Optional[datetime] = None
     
 class ProductBase(pydantic_model):
     name: str
