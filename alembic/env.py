@@ -45,8 +45,8 @@ target_metadata = Base.metadata
 
 #? Custom
 def run_setup_on_migration(ctx, **args):
-    with context.begin_transaction():
-        context.run_migrations()
+    with ctx.begin_transaction():
+        ctx.run_migrations()
     sleep(1)
     with DBSessionManager().session_sync() as session:
         for class_ in PictureMixin.__subclasses__():
@@ -92,7 +92,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata ,
+            connection=connection,
+            #? Custom
+            target_metadata=target_metadata ,
             on_version_apply=run_setup_on_migration
         )
 
